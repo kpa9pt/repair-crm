@@ -2,7 +2,7 @@
 set -e
 
 echo "🚀 Starting infrastructure..."
-docker-compose up -d --build
+docker compose up -d --build
 
 get_health() {
   docker inspect --format='{{.State.Health.Status}}' "$1"
@@ -11,7 +11,7 @@ get_health() {
 wait_for_health() {
   local name=$1
   local id
-  id=$(docker-compose ps -q "$name")
+  id=$(docker compose ps -q "$name")
 
   if [ -z "$id" ]; then
     echo "❌ Container $name not found"
@@ -37,4 +37,4 @@ export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/orders
 pytest tests -v
 
 echo "🧹 Cleaning up..."
-docker-compose down -v
+docker compose down -v
