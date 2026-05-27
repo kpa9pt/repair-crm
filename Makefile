@@ -11,3 +11,6 @@ build:
 
 logs:
 	docker-compose logs -f
+
+test:
+	./scripts/test.sh
