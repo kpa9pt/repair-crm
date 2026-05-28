@@ -8,4 +8,9 @@ repos:
     rev: 7.1.0
     hooks:
       - id: flake8
-        args: [--max-line-length=88]
+        args:
+          [
+            --config=.flake8,
+            --max-line-length=88,
+            --extend-ignore=E203,
+          ]

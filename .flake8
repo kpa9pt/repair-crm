@@ -1,0 +1,13 @@
+[flake8]
+exclude =
+    .git,
+    .venv,
+    __pycache__,
+    .pytest_cache,
+    shared/grpc_generated/*,
+    shared/db/migrations/versions/*,
+    *_pb2.py,
+    *_pb2_grpc.py,
+    tests/integration/conftest.py,
+max-line-length = 88
+extend-ignore = E203, F401
