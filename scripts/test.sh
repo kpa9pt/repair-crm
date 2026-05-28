@@ -33,7 +33,7 @@ wait_for_health postgres
 wait_for_health gateway
 
 echo "🧪 Running tests..."
-export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/orders
+export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/repair_crm
 pytest tests -v
 
 echo "🧹 Cleaning up..."
