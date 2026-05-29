@@ -12,6 +12,7 @@ from typing import Optional
 from decimal import Decimal
 from pydantic import BaseModel, Field, ConfigDict
 from shared.enums import Urgency, RequestStatus
+from datetime import date
 
 
 class RepairRequestBase(BaseModel):
@@ -42,7 +43,7 @@ class RepairRequestBase(BaseModel):
     client_payment: Decimal = Field(
         default_factory=lambda: Decimal("0.00"), description="Оплата клиента"
     )
-    deadline: Optional[datetime] = Field(None, description="Дедлайн")
+    deadline: Optional[date] = Field(None, description="Дедлайн (дата без времени)")
 
 
 class RepairRequestCreate(RepairRequestBase):
@@ -74,7 +75,7 @@ class RepairRequestUpdate(BaseModel):
     is_operational: Optional[bool] = Field(None, description="Техника на ходу?")
     parts_cost: Optional[Decimal] = Field(None, description="Стоимость запчастей")
     client_payment: Optional[Decimal] = Field(None, description="Оплата клиента")
-    deadline: Optional[datetime] = Field(None, description="Дедлайн")
+    deadline: Optional[date] = Field(None, description="Дедлайн (дата без времени)")
 
 
 class RepairRequestResponse(RepairRequestBase):
