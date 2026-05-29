@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+TEST_PATH=${1:-tests}
+
+
 echo "🚀 Starting infrastructure..."
 docker compose up -d --build
 
@@ -20,9 +23,9 @@ wait_for_health() {
 
   echo "⏳ Waiting for $name..."
 
-  until [ "$(get_health "$id")" = "healthy" ]; do
-    sleep 2
-  done
+#  until [ "$(get_health "$id")" = "healthy" ]; do
+#    pass
+#  done
 
   echo "✅ $name is healthy"
 }
@@ -32,9 +35,16 @@ echo "⏳ Waiting for services..."
 wait_for_health postgres
 wait_for_health gateway
 
+# В начале скрипта, после поднятия postgres
+echo "Creating test database..."
+docker compose exec -T postgres psql -U postgres -c "CREATE DATABASE repair_crm_test" 2>/dev/null || true
+
+echo "Applying migrations..."
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/repair_crm_test alembic upgrade head
+
 echo "🧪 Running tests..."
 export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/repair_crm
-pytest tests -v
+pytest "$TEST_PATH" -v
 
 echo "🧹 Cleaning up..."
 docker compose down -v

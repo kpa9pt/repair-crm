@@ -1,0 +1,163 @@
+"""
+Роутер для работы с заявками на ремонт.
+
+Все эндпоинты имеют префикс /api/v1/repair-requests
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from shared import get_session_maker
+from shared.repository import RepairRequestRepository
+from shared.schemas import (
+    RepairRequestCreate,
+    RepairRequestUpdate,
+    RepairRequestResponse,
+    RepairRequestListResponse,
+)
+
+router = APIRouter(prefix="/api/v1/repair-requests", tags=["Repair Requests"])
+
+
+async def get_repo():
+    session_maker = get_session_maker()
+
+    async with session_maker() as session:
+        yield RepairRequestRepository(session)
+
+
+@router.post(
+    "/", response_model=RepairRequestResponse, status_code=status.HTTP_201_CREATED
+)
+async def create_repair_request(
+    request_data: RepairRequestCreate, repo: RepairRequestRepository = Depends(get_repo)
+):
+    """
+    Создать новую заявку на ремонт.
+
+    - **vehicle_name**: название техники (обязательно)
+    - **description**: описание поломки (обязательно)
+    - **urgency**: срочность (low/normal/high/critical)
+    - **status**: статус (new/in_progress/waiting_parts/
+        diagnostics/waiting_approval/done)
+    """
+    # Конвертируем Pydantic модель в словарь
+    new_request = await repo.create(**request_data.model_dump())
+    await repo.session.commit()
+    return RepairRequestResponse.model_validate(new_request)
+
+
+@router.get("/", response_model=RepairRequestListResponse)
+async def get_all_repair_requests(
+    skip: int = 0, limit: int = 100, repo: RepairRequestRepository = Depends(get_repo)
+):
+    """
+    Получить список всех заявок с пагинацией.
+
+    - **skip**: сколько заявок пропустить
+    - **limit**: сколько заявок вернуть
+    - Сортировка: сначала новые (по created_at DESC)
+    """
+    requests = await repo.get_all(skip=skip, limit=limit)
+    total = len(requests)  # В будущем можно сделать отдельный метод для count
+
+    return RepairRequestListResponse(
+        items=[RepairRequestResponse.model_validate(r) for r in requests],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
+
+
+@router.get("/vehicle/{vehicle_name}", response_model=RepairRequestListResponse)
+async def get_repair_requests_by_vehicle(
+    vehicle_name: str,
+    skip: int = 0,
+    limit: int = 100,
+    repo: RepairRequestRepository = Depends(get_repo),
+):
+    """
+    Получить все заявки для конкретной техники.
+
+    - **vehicle_name**: название техники
+    - **skip**: сколько пропустить
+    - **limit**: сколько вернуть
+    """
+    # Метод get_by_vehicle нужно добавить в репозиторий
+    # Пока используем фильтрацию через get_all (не оптимально)
+    all_requests = await repo.get_by_vehicle(vehicle_name)
+    filtered = [r for r in all_requests if r.vehicle_name == vehicle_name]
+    total = len(filtered)
+    paginated = filtered[skip : skip + limit]
+
+    return RepairRequestListResponse(
+        items=[RepairRequestResponse.model_validate(r) for r in paginated],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
+
+
+@router.get("/{request_id}", response_model=RepairRequestResponse)
+async def get_repair_request(
+    request_id: int, repo: RepairRequestRepository = Depends(get_repo)
+):
+    """
+    Получить конкретную заявку по ID.
+    """
+    request = await repo.get_by_id(request_id)
+    if not request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Repair request with id {request_id} not found",
+        )
+    return RepairRequestResponse.model_validate(request)
+
+
+@router.patch("/{request_id}", response_model=RepairRequestResponse)
+async def update_repair_request(
+    request_id: int,
+    update_data: RepairRequestUpdate,
+    repo: RepairRequestRepository = Depends(get_repo),
+):
+    """
+    Обновить заявку (частичное обновление).
+
+    Можно обновить любое поле или несколько полей сразу.
+    """
+    existing = await repo.get_by_id(request_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Repair request with id {request_id} not found",
+        )
+
+    # Обновляем только переданные поля
+    update_dict = update_data.model_dump(exclude_unset=True)
+    for key, value in update_dict.items():
+        setattr(existing, key, value)
+
+    # await repo.session.commit()
+    await repo.session.commit()
+    await repo.session.refresh(existing)
+
+    return RepairRequestResponse.model_validate(existing)
+
+
+@router.delete("/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_repair_request(
+    request_id: int, repo: RepairRequestRepository = Depends(get_repo)
+):
+    """
+    Удалить заявку по ID.
+    """
+    existing = await repo.get_by_id(request_id)
+    if not existing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Repair request with id {request_id} not found",
+        )
+
+    await repo.session.delete(existing)
+    await repo.session.commit()
+
+    return None  # 204 No Content

@@ -12,8 +12,22 @@ build:
 logs:
 	docker-compose logs -f
 
+test-unit:
+	pytest tests/unit -v
+
+test-api:
+	./scripts/test.sh tests/api
+
+test-integration:
+	./scripts/test.sh tests/integration
+
+test-e2e:
+	./scripts/test.sh tests/e2e
+
 test:
-	./scripts/test.sh
+	make test-unit
+	make test-api
+	make test-integration
 
 generate-migrations:
 	@echo "📝 Generating migrations..."
