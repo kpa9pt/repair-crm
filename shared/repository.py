@@ -19,8 +19,9 @@ class RepairRequestRepository:
         """Создать новую заявку на ремонт."""
         request = RepairRequest(**kwargs)
         self.session.add(request)
-        await self.session.commit()
-        await self.session.refresh(request)
+        # НЕТ commit! Только flush для получения ID
+        await self.session.flush()
+        # await self.session.refresh(request)
         return request
 
     async def get_by_id(self, request_id: int) -> RepairRequest | None:
@@ -34,5 +35,16 @@ class RepairRequestRepository:
         """Получить список заявок с пагинацией."""
         result = await self.session.execute(
             select(RepairRequest).offset(skip).limit(limit)
+        )
+        return result.scalars().all()
+
+    async def get_by_vehicle(self, vehicle_name: str, skip: int = 0, limit: int = 100):
+        """Получить заявки по названию техники с пагинацией"""
+        result = await self.session.execute(
+            select(RepairRequest)
+            .where(RepairRequest.vehicle_name == vehicle_name)
+            .order_by(RepairRequest.created_at.desc())
+            .offset(skip)
+            .limit(limit)
         )
         return result.scalars().all()

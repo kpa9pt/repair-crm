@@ -8,4 +8,3 @@ def test_repair_request_creation():
     )
     assert request.vehicle_name == "Квадроцикл-5"
     assert request.status == "new"
-    # assert request.client_name == "Топ Лес"
