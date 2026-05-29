@@ -14,6 +14,15 @@ def get_session_maker():
     return _session_maker
 
 
+def get_engine():
+    """Возвращает асинхронный движок БД"""
+    global _engine
+    if _engine is None:
+        settings = get_settings()
+        _engine = create_async_engine(settings.database_url, echo=True)
+    return _engine
+
+
 def reset_db():
     global _engine, _session_maker
     _engine = None
