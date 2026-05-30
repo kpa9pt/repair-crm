@@ -23,7 +23,7 @@ jobs:
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             mkdir -p ~/repair-crm
-            cat > ~/repair-crm/.env << 'EOF'
+            cat > ~/repair-crm/.env << EOF
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
