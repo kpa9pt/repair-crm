@@ -1,0 +1,52 @@
+name: Deploy to VDS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+
+      - name: Deploy to VDS
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+          set -e
+
+          echo '🧨 Reset project folder...'
+          rm -rf ~/repair-crm
+
+          echo '📥 Cloning repo...'
+          git clone https://github.com/kpa9pt/repair-crm.git ~/repair-crm
+
+          cd ~/repair-crm
+
+          echo '📝 Creating .env...'
+          cat > .env << EOF
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
+          EOF
+      
+          echo '🚀 Starting services...'
+          docker compose up -d --build --remove-orphans
+          "
+
+
+      - name: Cleanup old images
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            docker system prune -f
+          "

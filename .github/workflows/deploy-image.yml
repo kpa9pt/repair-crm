@@ -25,13 +25,13 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
           set -e
 
-          echo '🧨 Reset project folder...'
           rm -rf ~/repair-crm
-
-          echo '📥 Cloning repo...'
-          git clone https://github.com/kpa9pt/repair-crm.git ~/repair-crm
-
+          mkdir -p ~/repair-crm
           cd ~/repair-crm
+
+          curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.yml -o docker-compose.yml
+          curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.prod.yml -o docker-compose.prod.yml
+
 
           echo '📝 Creating .env...'
           cat > .env << EOF
@@ -41,9 +41,17 @@ jobs:
           SECRET_KEY=${{ secrets.SECRET_KEY }}
           TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
           EOF
+          
+          docker compose \
+          -f docker-compose.yml \
+          -f docker-compose.prod.yml \
+          pull
       
           echo '🚀 Starting services...'
-          docker compose up -d --build --remove-orphans
+          docker compose \
+          -f docker-compose.yml \
+          -f docker-compose.prod.yml \
+          up -d --remove-orphans
           "
 
 
