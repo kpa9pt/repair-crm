@@ -25,13 +25,12 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
           set -e
 
-          echo '🧹 Stopping existing containers...'
-          cd ~/repair-crm || true
-          docker compose down --remove-orphans || true
-
           echo '🧨 Reset project folder...'
           rm -rf ~/repair-crm
+
+          echo '📥 Cloning repo...'
           git clone https://github.com/kpa9pt/repair-crm.git ~/repair-crm
+
           cd ~/repair-crm
 
           echo '📝 Creating .env...'
