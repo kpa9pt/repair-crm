@@ -19,37 +19,32 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Create .env on server
+
+      - name: Deploy to VDS
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            mkdir -p ~/repair-crm
-            cat > ~/repair-crm/.env << EOF
+          set -e
+
+          echo '🧹 Stopping existing containers...'
+          cd ~/repair-crm || true
+          docker compose down --remove-orphans || true
+
+          echo '🧨 Reset project folder...'
+          rm -rf ~/repair-crm
+          git clone https://github.com/kpa9pt/repair-crm.git ~/repair-crm
+          cd ~/repair-crm
+
+          echo '📝 Creating .env...'
+          cat > .env << EOF
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
           SECRET_KEY=${{ secrets.SECRET_KEY }}
           TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
           EOF
-          "
-
-      - name: Deploy with Docker Compose
-        run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            set -e
-
-            # гарантируем что код есть
-            if [ ! -d ~/repair-crm/.git ]; then
-              rm -rf ~/repair-crm
-              git clone https://github.com/kpa9pt/repair-crm.git ~/repair-crm
-            fi
-
-            cd ~/repair-crm
-
-            git fetch origin
-            git reset --hard origin/main
-            git clean -fd
-
-            docker compose up -d --build --remove-orphans
+      
+          echo '🚀 Starting services...'
+          docker compose up -d --build --remove-orphans
           "
 
 
