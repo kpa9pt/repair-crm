@@ -35,8 +35,11 @@ async def test_admin_login_with_correct_credentials(client):
 async def test_repair_request_list_accessible_after_login(client):
     """После входа список заявок доступен"""
     # Логинимся
+    settings = get_settings()
+
     await client.post(
-        "/admin/login", data={"username": "admin", "password": "repair_crm_2026"}
+        "/admin/login",
+        data={"username": settings.admin_username, "password": settings.admin_password},
     )
     # Проверяем список
     response = await client.get("/admin/repair-request/list")
