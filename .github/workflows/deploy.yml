@@ -40,7 +40,7 @@ jobs:
             # гарантируем что код есть
             if [ ! -d ~/repair-crm/.git ]; then
               rm -rf ~/repair-crm
-              git clone https://github.com/you/repo.git ~/repair-crm
+              git clone https://github.com/kpa9pt/repair-crm.git ~/repair-crm
             fi
 
             cd ~/repair-crm
