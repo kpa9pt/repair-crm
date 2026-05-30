@@ -3,6 +3,7 @@
 """
 
 import pytest
+from shared.settings import get_settings
 
 pytest = pytest.mark.asyncio
 
@@ -21,7 +22,12 @@ async def test_admin_panel_redirects_to_login(client):
 
 async def test_admin_login_with_correct_credentials(client):
     """Вход с правильными данными"""
-    login_data = {"username": "admin", "password": "repair_crm_2026"}
+    settings = get_settings()
+
+    login_data = {
+        "username": settings.admin_username,
+        "password": settings.admin_password,
+    }
     response = await client.post("/admin/login", data=login_data, follow_redirects=True)
     assert response.status_code == 200
 
