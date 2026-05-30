@@ -45,11 +45,7 @@ class RepairRequestAdmin(ModelView, model=RepairRequest):
         RepairRequest.urgency,
     ]
 
-    column_filters = [
-        RepairRequest.status,
-        RepairRequest.urgency,
-        RepairRequest.is_operational,
-    ]
+    column_filters = []
 
     column_default_sort = [(RepairRequest.created_at, True)]
 
