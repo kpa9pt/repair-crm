@@ -1,6 +1,8 @@
 services:
   gateway:
     image: ghcr.io/kpa9pt/repair-crm:latest
+    build: null
 
   migrations:
     image: ghcr.io/kpa9pt/repair-crm:latest
+    build: null
