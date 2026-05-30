@@ -1,0 +1,6 @@
+services:
+  gateway:
+    image: ghcr.io/kpa9pt/repair-crm:latest
+
+  migrations:
+    image: ghcr.io/kpa9pt/repair-crm:latest
