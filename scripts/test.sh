@@ -5,6 +5,7 @@ TEST_PATH=${1:-tests}
 
 
 echo "🚀 Starting infrastructure..."
+docker compose down -v
 docker compose up -d --build
 
 get_health() {
@@ -43,7 +44,7 @@ echo "Applying migrations..."
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/repair_crm_test alembic upgrade head
 
 echo "🧪 Running tests..."
-export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/repair_crm
+export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/repair_crm_test
 pytest "$TEST_PATH" -v
 
 echo "🧹 Cleaning up..."
