@@ -1,9 +1,10 @@
 name: Build and Push to GHCR
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+#  push:
+#    branches:
+#      - main
 
 jobs:
   build:
@@ -26,11 +27,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push gateway
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: services/gateway/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}-gateway:latest
+            ghcr.io/${{ github.repository }}-gateway:${{ github.sha }}
+            
+
+      - name: Build and push migrations
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/migrations/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-migrations:latest
+            ghcr.io/${{ github.repository }}-migrations:${{ github.sha }}
