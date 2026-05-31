@@ -10,10 +10,36 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./services/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - .env
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_web:/var/www/certbot
+    depends_on:
+      - gateway
+
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_web:/var/www/certbot
+      - /var/run/docker.sock:/var/run/docker.sock
 
 
   gateway:
@@ -29,8 +55,8 @@ services:
         "--port",
         "8000",
       ]
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     env_file:
       - .env
     environment:
@@ -66,3 +92,5 @@ services:
 
 volumes:
   postgres_data:
+  certbot_conf:
+  certbot_web:
