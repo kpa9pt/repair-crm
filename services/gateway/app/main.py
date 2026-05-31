@@ -5,6 +5,7 @@ from .admin import AdminAuth, RepairRequestAdmin
 from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
 from shared.db import get_engine  # ← импортируем новую функцию
+from fastapi.responses import RedirectResponse
 
 
 settings = get_settings()
@@ -38,6 +39,11 @@ admin.add_view(RepairRequestAdmin)
 
 # Подключаем роутеры
 app.include_router(repair_requests_router)
+
+
+@app.get("/")
+def root():
+    return RedirectResponse("/admin/")
 
 
 @app.get("/health")
