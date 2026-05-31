@@ -46,6 +46,7 @@ services:
       - .env
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+    restart: unless-stopped  # чтобы не падал после первого запуска
 
   gateway:
     build:

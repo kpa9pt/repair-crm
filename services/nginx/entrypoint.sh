@@ -52,6 +52,14 @@ NGINX_PID=$!
 
 echo "Watching certificate directory..."
 
+# ========== ИЗМЕНЕНИЕ ТУТ ==========
+# Ждем появления папки перед запуском inotifywait
+while [ ! -d "$STATE_DIR" ]; do
+  echo "Waiting for $STATE_DIR to be created..."
+  sleep 2
+done
+# ==================================
+
 # event-driven watcher
 inotifywait -m -r -e create -e modify -e moved_to "$STATE_DIR" |
 while read -r _; do
