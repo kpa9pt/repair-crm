@@ -7,6 +7,14 @@ CERT_PATH="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
 
 echo "🚀 Certbot service started for domain: $DOMAIN"
 
+if [ "$DOMAIN" = "localhost" ]; then
+  echo "Local mode detected, certbot disabled"
+
+  while true; do
+    sleep 12h
+  done
+fi
+
 # 1. бесконечный цикл "поддержки сертификата"
 while true; do
 
@@ -24,7 +32,7 @@ while true; do
       --non-interactive
 
     echo "✅ Certificate issued"
-    docker exec nginx nginx -s reload
+#    docker exec nginx nginx -s reload
   fi
 
   # 2. пробуем обновить (если уже есть)
@@ -34,7 +42,7 @@ while true; do
     --quiet
 
   echo "🔄 Renewal check done"
-  docker exec nginx nginx -s reload
+#  docker exec nginx nginx -s reload
 
   # 3. ждём (certbot не нужен каждую минуту)
   sleep 12h

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     secret_key: str | None = None  # Добавляем это поле
     admin_username: str = "admin"  # Добавляем с дефолтом
     admin_password: str = "admin123"  # Добавляем с дефолтом
+    domain_name: str = "localhost"
 
     model_config = SettingsConfigDict(env_file=".env")
 

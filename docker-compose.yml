@@ -35,12 +35,17 @@ services:
 
 
   certbot:
-    image: certbot/certbot
+    container_name: certbot
+    build:
+      context: ./services/certbot
+      dockerfile: Dockerfile
     volumes:
       - certbot_conf:/etc/letsencrypt
       - certbot_web:/var/www/certbot
-      - /var/run/docker.sock:/var/run/docker.sock
-
+    env_file:
+      - .env
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
 
   gateway:
     build:
