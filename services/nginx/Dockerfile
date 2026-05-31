@@ -1,4 +1,3 @@
-FROM ubuntu:latest
-LABEL authors="natalia"
+FROM nginx:alpine
 
-ENTRYPOINT ["top", "-b"]
+COPY nginx.conf /etc/nginx/nginx.conf
