@@ -47,3 +47,23 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}-migrations:latest
             ghcr.io/${{ github.repository }}-migrations:${{ github.sha }}
+
+      - name: Build and push nginx
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/nginx
+          file: Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-nginx:latest
+            ghcr.io/${{ github.repository }}-nginx:${{ github.sha }}
+
+      - name: Build and push certbot
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/certbot
+          file: Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-certbot:latest
+            ghcr.io/${{ github.repository }}-certbot:${{ github.sha }}

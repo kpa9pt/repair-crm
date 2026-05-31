@@ -1,8 +1,12 @@
 services:
   gateway:
     image: ghcr.io/kpa9pt/repair-crm-gateway:latest
-    build: null
 
   migrations:
     image: ghcr.io/kpa9pt/repair-crm-migrations:latest
-    build: null
+
+  nginx:
+    image: ghcr.io/kpa9pt/repair-crm-nginx:latest
+
+  certbot:
+    image: ghcr.io/kpa9pt/repair-crm-certbot:latest
