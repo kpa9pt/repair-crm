@@ -33,7 +33,6 @@ services:
     depends_on:
       - gateway
 
-
   certbot:
     container_name: certbot
     build:
