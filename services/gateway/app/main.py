@@ -42,7 +42,7 @@ app.include_router(repair_requests_router)
 
 
 @app.get("/")
-def root():
+async def root():
     return RedirectResponse("/admin/")
 
 
