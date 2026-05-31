@@ -18,8 +18,8 @@ services:
   nginx:
     container_name: nginx
     build:
-      context: ./services/nginx
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/nginx/Dockerfile
     ports:
       - "80:80"
       - "443:443"
@@ -36,8 +36,8 @@ services:
   certbot:
     container_name: certbot
     build:
-      context: ./services/certbot
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/certbot/Dockerfile
     volumes:
       - certbot_conf:/etc/letsencrypt
       - certbot_web:/var/www/certbot

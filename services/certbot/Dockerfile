@@ -1,10 +1,12 @@
 FROM certbot/certbot:latest
 
+#WORKDIR /app
+
 RUN apk add --no-cache bash docker-cli
 
-WORKDIR /app
 
-COPY entrypoint.sh /entrypoint.sh
+
+COPY services/certbot/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
