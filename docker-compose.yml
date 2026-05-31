@@ -5,6 +5,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: repair_crm
+      POSTGRES_HOST_AUTH_METHOD: trust  # <- КЛЮЧЕВАЯ СТРОКgi
     ports:
       - "5432:5432"
     volumes:
@@ -64,7 +65,7 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/repair_crm
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@postgres:5432/repair_crm}
     depends_on:
       postgres:
         condition: service_healthy
