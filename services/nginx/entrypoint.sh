@@ -60,13 +60,17 @@ while [ ! -d "$STATE_DIR" ]; do
 done
 # ==================================
 
-# event-driven watcher
-inotifywait -m -r -e create -e modify -e moved_to "$STATE_DIR" |
-while read -r _; do
-  echo "Certificate change detected"
-
-  load_config
-  reload_nginx
+# Правильный watcher: следим за родительской папкой, фильтруем по домену
+inotifywait -m -r -e create -e modify -e moved_to --format '%w%f' "$WATCH_DIR" 2>/dev/null |
+while read -r FILE; do
+  # Реагируем на создание папки домена или изменение файлов внутри нее
+  case "$FILE" in
+    *"/$DOMAIN/"*|*"/$DOMAIN")
+      echo "Change detected: $FILE"
+      load_config
+      reload_nginx
+      ;;
+  esac
 done &
 
 wait $NGINX_PID
