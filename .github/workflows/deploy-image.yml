@@ -27,6 +27,7 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
           set -e
 
+
 #          rm -rf ~/repair-crm
           mkdir -p ~/repair-crm
           cd ~/repair-crm
