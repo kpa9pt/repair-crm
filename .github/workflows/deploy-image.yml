@@ -21,17 +21,15 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-
       - name: Deploy to VDS
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
           set -e
 
-
 #          rm -rf ~/repair-crm
           mkdir -p ~/repair-crm
           cd ~/repair-crm
-
+               
           curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.yml -o docker-compose.yml
           curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.prod.yml -o docker-compose.override.yml
 #          curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.prod.yml -o docker-compose.prod.yml
