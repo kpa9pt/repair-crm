@@ -32,7 +32,10 @@ services:
       - certbot_conf:/etc/letsencrypt
       - certbot_web:/var/www/certbot
     depends_on:
-      - gateway
+      certbot:
+        condition: service_healthy  # ← ждем здоровый certbot (сертификат получен)
+      gateway:
+        condition: service_started
 
   certbot:
     container_name: certbot
@@ -46,6 +49,13 @@ services:
       - .env
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+    healthcheck:
+      # Проверяем, что скрипт дошел до бесконечного цикла (процесс sleep существует)
+      test: [ "CMD", "sh", "-c", "pgrep -f 'sleep 12h' || exit 1" ]
+      interval: 5s
+      timeout: 3s
+      retries: 60
+      start_period: 60s
     restart: unless-stopped  # чтобы не падал после первого запуска
 
   gateway:
