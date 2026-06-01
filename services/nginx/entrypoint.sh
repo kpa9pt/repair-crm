@@ -3,9 +3,16 @@ set -e
 
 DOMAIN=${DOMAIN_NAME:-localhost}
 CERT="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
-STATE_DIR="/etc/letsencrypt/live/$DOMAIN"
+WATCH_DIR="/etc/letsencrypt/live"
 
 echo "Starting nginx bootstrap..."
+
+# Если localhost - просто запускаем HTTP и выходим (без watcher'а)
+if [ "$DOMAIN" = "localhost" ]; then
+  echo "Localhost mode detected, running HTTP only"
+  envsubst '$DOMAIN_NAME' < /etc/nginx/nginx-http.conf > /etc/nginx/nginx.conf
+  exec nginx -g 'daemon off;'
+fi
 
 load_config() {
   if [ -f "$CERT" ]; then
@@ -52,13 +59,11 @@ NGINX_PID=$!
 
 echo "Watching certificate directory..."
 
-# ========== ИЗМЕНЕНИЕ ТУТ ==========
 # Ждем появления папки перед запуском inotifywait
-while [ ! -d "$STATE_DIR" ]; do
-  echo "Waiting for $STATE_DIR to be created..."
+while [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; do
+  echo "Waiting for /etc/letsencrypt/live/$DOMAIN to be created..."
   sleep 2
 done
-# ==================================
 
 # Правильный watcher: следим за родительской папкой, фильтруем по домену
 inotifywait -m -r -e create -e modify -e moved_to --format '%w%f' "$WATCH_DIR" 2>/dev/null |

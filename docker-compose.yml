@@ -32,10 +32,16 @@ services:
       - certbot_conf:/etc/letsencrypt
       - certbot_web:/var/www/certbot
     depends_on:
-      certbot:
-        condition: service_healthy  # ← ждем здоровый certbot (сертификат получен)
       gateway:
-        condition: service_started
+        condition: service_started   # или service_healthy
+    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost/.well-known/acme-challenge/healthcheck" ]
+      test: [ "CMD", "nginx", "-t" ]  # проверяет только конфиг
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    restart: unless-stopped
 
   certbot:
     container_name: certbot
@@ -49,9 +55,12 @@ services:
       - .env
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME:-localhost}
+    depends_on:
+      nginx:
+        condition: service_healthy  # ← ждем здоровый nginx
     healthcheck:
       # Проверяем, что скрипт дошел до бесконечного цикла (процесс sleep существует)
-      test: [ "CMD", "sh", "-c", "pgrep -f 'sleep 12h' || exit 1" ]
+      test: [ "CMD", "sh", "-c", "pgrep -f 'sleep 12h' || pgrep -f 'sleep 3600' || exit 1" ]
       interval: 5s
       timeout: 3s
       retries: 60
