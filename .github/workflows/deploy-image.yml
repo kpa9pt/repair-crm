@@ -29,7 +29,7 @@ jobs:
 #          rm -rf ~/repair-crm
           mkdir -p ~/repair-crm
           cd ~/repair-crm
-               
+
           curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.yml -o docker-compose.yml
           curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.prod.yml -o docker-compose.override.yml
 #          curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.prod.yml -o docker-compose.prod.yml
@@ -57,13 +57,10 @@ jobs:
 #          -f docker-compose.prod.yml \
 #          up -d --remove-orphans
 #          docker compose up -d --remove-orphans
-               
-               
+          
+          
           docker compose up -d --pull always --remove-orphans
           "
-
-
-          
 
       - name: Cleanup old images
         run: |
