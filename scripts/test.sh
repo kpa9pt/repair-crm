@@ -5,8 +5,17 @@ TEST_PATH=${1:-tests}
 
 
 echo "🚀 Starting infrastructure..."
-docker compose down -v
-docker compose up -d --build
+#docker compose down -v
+#docker compose up -d --build
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.test.yml \
+  down -v
+
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.test.yml \
+  up -d --build
 
 get_health() {
   docker inspect --format='{{.State.Health.Status}}' "$1"
