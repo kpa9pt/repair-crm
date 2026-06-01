@@ -42,7 +42,7 @@ jobs:
           DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
           EOF
           
-          echo '🚀 Starting services...
+          echo '🚀 Starting services...'
           docker compose up -d --pull always --remove-orphans
           "
 
