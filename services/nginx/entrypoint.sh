@@ -53,6 +53,7 @@ reload_nginx() {
 # initial setup
 load_config
 
+
 # start nginx
 nginx -g 'daemon off;' &
 NGINX_PID=$!
@@ -64,6 +65,15 @@ while [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; do
   echo "Waiting for /etc/letsencrypt/live/$DOMAIN to be created..."
   sleep 2
 done
+
+
+echo "Initial cert check before watcher..."
+
+if [ -f "$CERT" ]; then
+  echo "Initial SSL already exists → forcing config reload"
+  load_config
+  reload_nginx
+fi
 
 # Правильный watcher: следим за родительской папкой, фильтруем по домену
 inotifywait -m -r -e create -e modify -e moved_to --format '%w%f' "$WATCH_DIR" 2>/dev/null |
