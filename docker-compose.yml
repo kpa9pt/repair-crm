@@ -86,6 +86,7 @@ services:
 
 
   gateway-blue:
+    container_name: gateway-blue
     build:
       context: .
       dockerfile: services/gateway/Dockerfile
@@ -131,6 +132,7 @@ services:
 
 
   gateway-green:
+    container_name: gateway-green
     build:
       context: .
       dockerfile: services/gateway/Dockerfile
