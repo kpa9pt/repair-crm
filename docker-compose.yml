@@ -85,9 +85,6 @@ services:
     restart: unless-stopped
 
   x-gateway-base: &gateway-base
-    build:
-      context: .
-      dockerfile: services/gateway/Dockerfile
 
     expose:
       - "8000"
@@ -132,10 +129,16 @@ services:
   gateway-blue:
     <<: *gateway-base
     container_name: gateway-blue
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
 
   gateway-green:
     <<: *gateway-base
     container_name: gateway-green
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
 
   migrations:
     build:
