@@ -71,9 +71,16 @@ jobs:
           scp docker-compose.override.yml \
               ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/docker-compose.override.yml
 
-      - name: push to VDS
+      - name: Deploy to VDS
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
           set -e
 
           mkdir -p ~/repair-crm
@@ -84,18 +91,19 @@ jobs:
           
           
           echo '📝 Creating .env...'
-          cat > .env << EOF
-          DATABASE_URL=${{ secrets.DATABASE_URL }}
-          ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
-          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
-          DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
-          EOF
+          cat > .env << 'ENVEOF'
+          DATABASE_URL=$DATABASE_URL
+          ADMIN_USERNAME=$ADMIN_USERNAME
+          ADMIN_PASSWORD=$ADMIN_PASSWORD
+          SECRET_KEY=$SECRET_KEY
+          TELEGRAM_TOKEN=$TELEGRAM_TOKEN
+          DOMAIN_NAME=$DOMAIN_NAME
+          ENVEOF
           
           echo '🚀 Starting services...'
 #          docker compose up -d --pull always --remove-orphans
           docker compose up -d
+          EOF
 
 
       - name: Wait for new service healthcheck
