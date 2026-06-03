@@ -105,8 +105,14 @@ jobs:
         run: |
           python scripts/build_manifest.py > images.json
         env:
-          CHANGED_GATEWAY: ${{ steps.filter.outputs.gateway }}
-          CHANGED_MIGRATIONS: ${{ steps.filter.outputs.migrations }}
-          CHANGED_NGINX: ${{ steps.filter.outputs.nginx }}
-          CHANGED_CERTBOT: ${{ steps.filter.outputs.certbot }}
+          CHANGED_GATEWAY: ${{ steps.changes.outputs.gateway }}
+          CHANGED_MIGRATIONS: ${{ steps.changes.outputs.migrations }}
+          CHANGED_NGINX: ${{ steps.changes.outputs.nginx }}
+          CHANGED_CERTBOT: ${{ steps.changes.outputs.certbot }}
           GITHUB_SHA: ${{ github.sha }}
+
+      - name: Upload images artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: images
+          path: images.json
