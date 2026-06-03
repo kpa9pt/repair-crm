@@ -73,15 +73,14 @@ jobs:
 
       - name: push to VDS
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOFSSH
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOFSSH'
           set -e
 
           mkdir -p ~/repair-crm
           cd ~/repair-crm
 
           curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.yml -o docker-compose.yml
-#          curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.prod.yml -o docker-compose.override.yml
-          
+         
           
           echo '📝 Creating .env...'
           cat > .env << ENVEOF
