@@ -1,11 +1,13 @@
 name: Deploy to VDS
 
+#on:
+#  workflow_run:
+#    workflows:
+#      - "Build and Push to GHCR"
+#    types:
+#      - completed
 on:
-  workflow_run:
-    workflows:
-      - "Build and Push to GHCR"
-    types:
-      - completed
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -33,6 +35,10 @@ jobs:
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
 
       - name: Bootstrap state
         if: steps.state.outputs.exists == 'false'
