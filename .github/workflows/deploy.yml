@@ -114,8 +114,8 @@ jobs:
               INACTIVE=\"blue\"
             fi
 
-            docker exec gateway-\$INACTIVE \
-              curl -fsS --retry 30 --retry-delay 2 http://localhost:8000/health
+            docker exec gateway-$INACTIVE \
+            python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
           "
 
       - name: Switch traffic (Nginx)
