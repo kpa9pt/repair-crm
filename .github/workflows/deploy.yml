@@ -62,7 +62,6 @@ jobs:
 
       - name: Update state
         run: |
-          cp ~/repair-crm/state.json state.json
           python scripts/deploy/update_state.py > new_state.json
           mv new_state.json state.json
 
