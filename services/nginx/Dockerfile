@@ -1,14 +1,13 @@
 FROM nginx:alpine
 
-#WORKDIR /app
-
-RUN apk add --no-cache gettext
-RUN apk add --no-cache inotify-tools
+RUN apk add --no-cache gettext inotify-tools bash
 
 COPY services/nginx/nginx-https.conf /etc/nginx/nginx-https.conf
 COPY services/nginx/nginx-http.conf /etc/nginx/nginx-http.conf
-COPY services/nginx/entrypoint.sh /entrypoint.sh
 
-RUN chmod +x /entrypoint.sh
+# 👇 ВСЕ скрипты в одну папку
+COPY services/nginx/scripts/ /scripts/
 
-ENTRYPOINT ["/entrypoint.sh"]
+RUN chmod +x /scripts/*.sh
+
+ENTRYPOINT ["/scripts/entrypoint.sh"]

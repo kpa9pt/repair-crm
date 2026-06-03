@@ -43,7 +43,7 @@ wait_for_health() {
 echo "⏳ Waiting for services..."
 
 wait_for_health postgres
-wait_for_health gateway
+wait_for_health x-gateway-base
 
 # В начале скрипта, после поднятия postgres
 echo "Creating test database..."

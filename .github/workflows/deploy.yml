@@ -12,6 +12,8 @@ jobs:
     if: >
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_branch == 'main'
+    env:
+      GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
     runs-on: ubuntu-latest
     steps:
       - name: Setup SSH
@@ -21,29 +23,166 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to VDS
+      - name: Check state file
+        id: state
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+          if ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "[ -f ~/repair-crm/state.json ]"
+          then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bootstrap state
+        if: steps.state.outputs.exists == 'false'
+        env:
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+        run: |
+          python scripts/deploy/bootstrap_state.py > state.json
+
+      - name: Upload state
+        if: steps.state.outputs.exists == 'false'
+        run: |
+          scp state.json \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
+
+      - name: Download images artifact
+        run: |
+          gh run download ${{ github.event.workflow_run.id }} \
+          -n images.json \
+          -D .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update state
+        run: |
+          cp ~/repair-crm/state.json state.json
+          python scripts/deploy/update_state.py > new_state.json
+          mv new_state.json state.json
+
+      - name: Generate compose override
+        run: |
+          STATE_FILE=state.json 
+          python scripts/deploy/render_compose.py > docker-compose.override.yml
+
+      - name: Upload override to server
+        run: |
+          scp docker-compose.override.yml \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/docker-compose.override.yml
+
+      - name: push to VDS
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOFSSH'
           set -e
 
           mkdir -p ~/repair-crm
           cd ~/repair-crm
 
           curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.yml -o docker-compose.yml
-          curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.prod.yml -o docker-compose.override.yml
-
+         
+          
           echo '📝 Creating .env...'
-          cat > .env << EOF
+          cat > .env << ENVEOF
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
           SECRET_KEY=${{ secrets.SECRET_KEY }}
           TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
           DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
-          EOF
+          ENVEOF
           
           echo '🚀 Starting services...'
-          docker compose up -d --pull always --remove-orphans
+          docker compose up -d
+          EOFSSH
+
+
+      - name: Wait for new service healthcheck
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            set -e
+
+            ACTIVE=\$(cat ~/repair-crm/state.json | jq -r .active)
+
+            if [ \"\$ACTIVE\" = \"blue\" ]; then
+              INACTIVE=\"green\"
+            else
+              INACTIVE=\"blue\"
+            fi
+
+            docker exec gateway-\$INACTIVE \
+              curl -fsS --retry 30 --retry-delay 2 http://localhost:8000/health
+          "
+
+      - name: Switch traffic (Nginx)
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            set -e
+
+            CURRENT=\$(cat /etc/nginx/state/active)
+            if [ \"\$CURRENT\" = \"blue\" ]; then
+              echo green > /etc/nginx/state/active
+            else
+              echo blue > /etc/nginx/state/active
+            fi
+
+            docker exec nginx nginx -s reload
+          "
+
+      - name: Post-switch smoke + soak healthcheck
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            set -e
+
+            echo '=== SMOKE CHECK (fast) ==='
+
+            curl -fsS \
+              --retry 30 \
+              --retry-delay 2 \
+              http://127.0.0.1/health
+
+            echo 'SMOKE OK'
+
+            echo '=== SOAK CHECK (delayed) ==='
+
+            sleep 60
+
+            curl -fsS \
+              --retry 10 \
+              --retry-delay 3 \
+              http://127.0.0.1/health
+
+            echo 'SOAK OK'
+          "      
+
+      - name: Commit state + cleanup inactive
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            set -e
+
+            echo '=== BACKUP OLD STATE ==='
+            cp ~/repair-crm/state.json ~/repair-crm/state.backup.json || true
+          "
+
+          echo '=== UPLOAD NEW STATE ==='
+          scp state.json \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
+
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            set -e
+
+            echo '=== READ NEW STATE ==='
+            ACTIVE=\$(cat ~/repair-crm/state.json | jq -r .active)
+
+            if [ \"\$ACTIVE\" = \"blue\" ]; then
+              INACTIVE=\"green\"
+            else
+              INACTIVE=\"blue\"
+            fi
+
+            echo \"Stopping inactive container: gateway-\$INACTIVE\"
+
+            docker stop gateway-\$INACTIVE || true
           "
 
       - name: Cleanup old images
