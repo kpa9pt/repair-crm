@@ -47,9 +47,9 @@ jobs:
           python scripts/deploy/bootstrap_state.py > state.json
 
       - name: Upload state
-        if: steps.state.outputs.exists == 'false'
+#        if: steps.state.outputs.exists == 'false'
         run: |
-          scp state.json \
+          scp state.json 
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
 
       - name: Download images artifact
