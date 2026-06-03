@@ -73,7 +73,7 @@ jobs:
 
       - name: push to VDS
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << EOF
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
           set -e
 
           mkdir -p ~/repair-crm
