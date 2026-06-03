@@ -1,12 +1,15 @@
 services:
-  gateway:
-    image: ghcr.io/kpa9pt/repair-crm-gateway:latest
+  gateway-blue:
+    image: ${GATEWAY_BLUE_IMAGE}
 
-  migrations:
-    image: ghcr.io/kpa9pt/repair-crm-migrations:latest
+  gateway-green:
+    image: ${GATEWAY_GREEN_IMAGE}
 
   nginx:
-    image: ghcr.io/kpa9pt/repair-crm-nginx:latest
+    image: ${NGINX_IMAGE}
 
   certbot:
-    image: ghcr.io/kpa9pt/repair-crm-certbot:latest
+    image: ${CERTBOT_IMAGE}
+
+  migrations:
+    image: ${MIGRATIONS_IMAGE}

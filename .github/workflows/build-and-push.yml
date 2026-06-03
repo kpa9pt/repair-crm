@@ -17,6 +17,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Detect changed services
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            gateway:
+              - 'services/gateway/**'
+              - 'shared/**'
+              - 'requirements.txt'
+
+            migrations:
+              - 'services/migrations/**'
+              - 'shared/**'
+              - 'alembic.ini'
+              - 'requirements.txt'
+
+            nginx:
+              - 'services/nginx/**'
+
+            certbot:
+              - 'services/certbot/**'
+
+      - name: Print detected changes
+        run: |
+          echo "gateway=${{ steps.changes.outputs.gateway }}"
+          echo "migrations=${{ steps.changes.outputs.migrations }}"
+          echo "nginx=${{ steps.changes.outputs.nginx }}"
+          echo "certbot=${{ steps.changes.outputs.certbot }}"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -28,6 +57,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push gateway
+        if: steps.changes.outputs.gateway == 'true
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -39,6 +69,7 @@ jobs:
             
 
       - name: Build and push migrations
+        if: steps.changes.outputs.migrations == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -49,6 +80,7 @@ jobs:
             ghcr.io/${{ github.repository }}-migrations:${{ github.sha }}
 
       - name: Build and push nginx
+        if: steps.changes.outputs.nginx == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -59,6 +91,7 @@ jobs:
             ghcr.io/${{ github.repository }}-nginx:${{ github.sha }}
 
       - name: Build and push certbot
+        if: steps.changes.outputs.certbot == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -67,3 +100,13 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}-certbot:latest
             ghcr.io/${{ github.repository }}-certbot:${{ github.sha }}
+
+      - name: Build image manifest
+        run: |
+          python scripts/build_manifest.py > images.json
+        env:
+          CHANGED_GATEWAY: ${{ steps.filter.outputs.gateway }}
+          CHANGED_MIGRATIONS: ${{ steps.filter.outputs.migrations }}
+          CHANGED_NGINX: ${{ steps.filter.outputs.nginx }}
+          CHANGED_CERTBOT: ${{ steps.filter.outputs.certbot }}
+          GITHUB_SHA: ${{ github.sha }}

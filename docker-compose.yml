@@ -38,9 +38,7 @@ services:
     volumes:
       - certbot_conf:/etc/letsencrypt
       - certbot_web:/var/www/certbot
-    depends_on:
-      gateway:
-        condition: service_started   # или service_healthy
+      - nginx_state:/etc/nginx/state
     healthcheck:
 #      test: [ "CMD", "curl", "-f", "http://localhost/.well-known/acme-challenge/healthcheck" ]
       test: [ "CMD", "nginx", "-t" ]  # проверяет только конфиг
@@ -86,10 +84,20 @@ services:
           memory: 64M
     restart: unless-stopped
 
-  gateway:
+  x-gateway-base: &gateway-base
     build:
       context: .
       dockerfile: services/gateway/Dockerfile
+
+    expose:
+      - "8000"
+
+    env_file:
+      - .env
+
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@postgres:5432/repair_crm}
+
     command:
       [
         "uvicorn",
@@ -97,37 +105,37 @@ services:
         "--host",
         "0.0.0.0",
         "--port",
-        "8000",
+        "8000"
       ]
-    expose:
-      - "8000"
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@postgres:5432/repair_crm}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      migrations:
-        condition: service_completed_successfully
+
     healthcheck:
       test:
         [
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
         ]
       interval: 5s
       timeout: 3s
       retries: 10
+
+    restart: unless-stopped
+
     deploy:
       resources:
         limits:
           memory: 256M
         reservations:
           memory: 128M
-    restart: unless-stopped
+
+  gateway-blue:
+    <<: *gateway-base
+    container_name: gateway-blue
+
+  gateway-green:
+    <<: *gateway-base
+    container_name: gateway-green
 
   migrations:
     build:
@@ -145,3 +153,4 @@ volumes:
   postgres_data:
   certbot_conf:
   certbot_web:
+  nginx_state:

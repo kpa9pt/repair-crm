@@ -54,3 +54,5 @@ virtualenv==21.4.1
 watchfiles==1.2.0
 websockets==16.0
 WTForms==3.1.2
+
+requests
