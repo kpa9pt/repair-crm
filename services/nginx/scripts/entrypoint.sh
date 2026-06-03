@@ -4,13 +4,16 @@ set -e
 echo "[BOOT] nginx starting"
 
 echo "[STEP] init state"
-/scripts/render.sh init
+/scripts/init_state.sh
 
-echo "[STEP] render config"
-/scripts/render.sh render
+echo "[STEP] render upstream"
+/scripts/render_upstream.sh
+
+echo "[STEP] generate nginx config"
+/scripts/nginx_config.sh
 
 echo "[STEP] nginx test"
-nginx -t || exit 1
+nginx -t
 
 echo "[STEP] start nginx"
 nginx -g 'daemon off;' &
