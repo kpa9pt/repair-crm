@@ -40,7 +40,7 @@ jobs:
 
 
       - name: Bootstrap state
-        if: steps.state.outputs.exists == 'false'
+#        if: steps.state.outputs.exists == 'false'
         env:
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
         run: |
