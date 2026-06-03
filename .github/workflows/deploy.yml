@@ -55,7 +55,7 @@ jobs:
       - name: Download images artifact
         run: |
           gh run download ${{ github.event.workflow_run.id }} \
-          -n images.json \
+          -n images \
           -D .
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
