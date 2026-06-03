@@ -57,7 +57,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push gateway
-        if: steps.changes.outputs.gateway == 'true
+        if: steps.changes.outputs.gateway == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .

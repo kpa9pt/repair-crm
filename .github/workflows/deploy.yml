@@ -71,7 +71,7 @@ jobs:
           scp docker-compose.override.yml \
               ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/docker-compose.override.yml
 
-      - name: Deploy to VDS
+      - name: push to VDS
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
           set -e
