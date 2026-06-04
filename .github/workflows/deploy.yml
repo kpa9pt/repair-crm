@@ -133,40 +133,40 @@ jobs:
 
       - name: Wait for new service healthcheck
         run: |
-          echo "LOCAL INACTIVE=[\$INACTIVE]"
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            set -e
+          echo "LOCAL INACTIVE=[$INACTIVE]"
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} <<'SSH'
+          set -e
 
-            ACTIVE=\$(cat ~/repair-crm/state.json | jq -r .active)
+          ACTIVE=$(cat ~/repair-crm/state.json | jq -r .active)
 
-            if [ \"\$ACTIVE\" = \"blue\" ]; then
-              INACTIVE=\"green\"
-            else
-              INACTIVE=\"blue\"
-            fi
+          if [ "$ACTIVE" = "blue" ]; then
+            INACTIVE="green"
+          else
+            INACTIVE="blue"
+          fi
           
-            echo \"LOCAL INACTIVE=[\$INACTIVE]\"
+          echo "LOCAL INACTIVE=[$INACTIVE]"
 
-            docker exec gateway-\$INACTIVE python - <<'EOF'
-            import urllib.request
-            import sys
+          docker exec gateway-$INACTIVE python - <<'PY'
+          import urllib.request
+          import sys
 
-            try:
-              urllib.request.urlopen("http://localhost:8000/health", timeout=2)
-            except Exception as e:
-              print("healthcheck failed:", e)
-              sys.exit(1)
+          try:
+            urllib.request.urlopen("http://localhost:8000/health", timeout=2)
+          except Exception as e:
+            print("healthcheck failed:", e)
+            sys.exit(1)
 
-            print("healthcheck OK")
-            EOF
-          "
+          print("healthcheck OK")
+          PY
+          SSH
 
       - name: Switch traffic (Nginx)
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
-            docker exec nginx python - <<EOF
+            docker exec nginx python - <<'EOF'
             CURRENT=$(cat /etc/nginx/state/active)
             if [ "$CURRENT" = "blue" ]; then
               echo green > /etc/nginx/state/active
