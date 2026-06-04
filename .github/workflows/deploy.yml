@@ -20,14 +20,14 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SERVER_SSH_KEY2 }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_IP2 }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Check state file
         id: state
         run: |
-          if ssh ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }} \
+          if ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "[ -f ~/repair-crm/state.json ]"
           then
             echo "exists=true" >> $GITHUB_OUTPUT
@@ -50,7 +50,7 @@ jobs:
 #        if: steps.state.outputs.exists == 'false'
         run: |
           scp state.json \
-            ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }}:~/repair-crm/state.json
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
 
       - name: Download images artifact
         run: |
@@ -73,11 +73,11 @@ jobs:
       - name: Upload override to server
         run: |
           scp docker-compose.override.yml \
-              ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }}:~/repair-crm/docker-compose.override.yml
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/docker-compose.override.yml
 
       - name: push to VDS
         run: |
-          ssh ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }} << 'EOFSSH'
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOFSSH'
           set -e
 
           mkdir -p ~/repair-crm
@@ -102,7 +102,7 @@ jobs:
 
       - name: Verify ACTIVE gateway is healthy
         run: |
-          ssh ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }} "
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
             ACTIVE=\$(cat ~/repair-crm/state.json | jq -r .active)
@@ -131,7 +131,8 @@ jobs:
 
       - name: Wait for new service healthcheck
         run: |
-          ssh ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }} "
+          echo "LOCAL INACTIVE=[$INACTIVE]"
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
             ACTIVE=\$(cat ~/repair-crm/state.json | jq -r .active)
@@ -141,14 +142,16 @@ jobs:
             else
               INACTIVE=\"blue\"
             fi
+          
+            echo "LOCAL INACTIVE=[$INACTIVE]"
 
-            docker exec gateway-$INACTIVE \
+            docker exec gateway-\$INACTIVE \
             python -c 'import urllib.request; urllib.request.urlopen('http://localhost:8000/health')'
           "
 
       - name: Switch traffic (Nginx)
         run: |
-          ssh ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }} "
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
             CURRENT=\$(cat /etc/nginx/state/active)
@@ -163,7 +166,7 @@ jobs:
 
       - name: Post-switch smoke + soak healthcheck
         run: |
-          ssh ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }} "
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
             echo '=== SMOKE CHECK (fast) ==='
@@ -189,7 +192,7 @@ jobs:
 
       - name: Commit state + cleanup inactive
         run: |
-          ssh ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }} "
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
             echo '=== BACKUP OLD STATE ==='
@@ -198,9 +201,9 @@ jobs:
 
           echo '=== UPLOAD NEW STATE ==='
           scp state.json \
-            ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }}:~/repair-crm/state.json
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
 
-          ssh ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }} "
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
             echo '=== READ NEW STATE ==='
@@ -219,6 +222,6 @@ jobs:
 
       - name: Cleanup old images
         run: |
-          ssh ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_IP2 }} "
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             docker system prune -f
           "
