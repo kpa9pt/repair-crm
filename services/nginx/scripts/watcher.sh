@@ -10,6 +10,9 @@ start_watcher() {
     sleep 2
   done
 
+  render_upstream
+  nginx -s reload
+
   echo "[WATCHER] cert dir ready"
 
   inotifywait -m -r -e create -e modify -e moved_to "$WATCH_DIR" |

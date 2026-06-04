@@ -131,7 +131,7 @@ jobs:
 
       - name: Wait for new service healthcheck
         run: |
-          echo "LOCAL INACTIVE=[$INACTIVE]"
+          echo "LOCAL INACTIVE=[\$INACTIVE]"
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
@@ -143,10 +143,10 @@ jobs:
               INACTIVE=\"blue\"
             fi
           
-            echo "LOCAL INACTIVE=[$INACTIVE]"
+            echo "LOCAL INACTIVE=[\$INACTIVE]"
 
             docker exec gateway-\$INACTIVE \
-            python -c 'import urllib.request; urllib.request.urlopen('http://localhost:8000/health')'
+            python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\"
           "
 
       - name: Switch traffic (Nginx)
