@@ -133,7 +133,6 @@ jobs:
 
       - name: Wait for new service healthcheck
         run: |
-          echo "LOCAL INACTIVE=[$INACTIVE]"
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} <<'SSH'
           set -e
 
@@ -166,16 +165,16 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
-            docker exec nginx python - <<'EOF'
-            CURRENT=$(cat /etc/nginx/state/active)
-            if [ "$CURRENT" = "blue" ]; then
-              echo green > /etc/nginx/state/active
-            else
-              echo blue > /etc/nginx/state/active
-            fi
+            docker exec nginx bash - <<'BASH'
+          CURRENT=$(cat /etc/nginx/state/active)
+          if [ "$CURRENT" = "blue" ]; then
+            echo green > /etc/nginx/state/active
+          else
+            echo blue > /etc/nginx/state/active
+          fi
 
-            nginx -s reload
-            EOF
+          nginx -s reload
+          BASH
           "
 
       - name: Post-switch smoke + soak healthcheck
