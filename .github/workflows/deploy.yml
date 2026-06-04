@@ -27,13 +27,15 @@ jobs:
       - name: Check state file
         id: state
         run: |
-          if ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "[ -f ~/repair-crm/state.json ]"
-          then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            mkdir -p ~/repair-crm
+
+            if [ -f ~/repair-crm/state.json ]; then
+              echo 'exists=true'
+            else
+              echo 'exists=false'
+            fi
+          " >> $GITHUB_OUTPUT
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -143,10 +145,20 @@ jobs:
               INACTIVE=\"blue\"
             fi
           
-            echo "LOCAL INACTIVE=[\$INACTIVE]"
+            echo \"LOCAL INACTIVE=[\$INACTIVE]\"
 
-            docker exec gateway-\$INACTIVE \
-            python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\"
+            docker exec gateway-\$INACTIVE python - <<'EOF'
+            import urllib.request
+            import sys
+
+            try:
+              urllib.request.urlopen("http://localhost:8000/health", timeout=2)
+            except Exception as e:
+              print("healthcheck failed:", e)
+              sys.exit(1)
+
+            print("healthcheck OK")
+            EOF
           "
 
       - name: Switch traffic (Nginx)
@@ -154,14 +166,16 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
-            CURRENT=\$(cat /etc/nginx/state/active)
-            if [ \"\$CURRENT\" = \"blue\" ]; then
+            docker exec nginx python - <<EOF
+            CURRENT=$(cat /etc/nginx/state/active)
+            if [ "$CURRENT" = "blue" ]; then
               echo green > /etc/nginx/state/active
             else
               echo blue > /etc/nginx/state/active
             fi
 
-            docker exec nginx nginx -s reload
+            nginx -s reload
+            EOF
           "
 
       - name: Post-switch smoke + soak healthcheck
