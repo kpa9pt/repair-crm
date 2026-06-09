@@ -1,10 +1,8 @@
 #!/bin/sh
 set -e
 
-mkdir -p /etc/nginx/state
+STATE_FILE=/etc/nginx/state/state.json
 
-if [ ! -f /etc/nginx/state/active ]; then
-  echo "blue" > /etc/nginx/state/active
-fi
+ACTIVE=$(cat "$STATE_FILE" 2>/dev/null | jq -r '.active // "blue"' || echo "blue")
 
-echo "[STATE] active=$(cat /etc/nginx/state/active)"
+echo "[STATE] active=$ACTIVE"
