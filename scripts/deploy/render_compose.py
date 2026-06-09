@@ -25,7 +25,7 @@ if "gateway-green" in state:
 # остальные сервисы
 for service, image in state.items():
 
-    if service in ["active", "gateway-blue", "gateway-green"]:
+    if service in ["active", "gateway-blue", "gateway-green", "stable"]:
         continue
 
     yaml.append(f"  {service}:")
