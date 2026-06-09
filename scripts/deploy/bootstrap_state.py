@@ -45,6 +45,7 @@ def latest_image(service: str) -> str:
 
 state = {
     "active": "blue",
+    "stable": "blue",
 }
 
 gateway_image = latest_image("gateway")

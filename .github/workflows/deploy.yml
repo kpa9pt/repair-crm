@@ -67,6 +67,16 @@ jobs:
           python scripts/deploy/update_state.py > new_state.json
           mv new_state.json state.json
 
+      - name: Sync state to server (always)
+        run: |
+          scp state.json \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
+
+      - name: Check if deploy needed
+        id: diff
+        run: |
+          python scripts/deploy/check_diff.py
+
       - name: Generate compose override
         run: |
           STATE_FILE=state.json 
@@ -160,24 +170,41 @@ jobs:
           PY
           SSH
 
-      - name: Switch traffic (Nginx)
+      - name: Switch traffic (state-driven)
+        if: steps.diff.outputs.changed == 'true'
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
-            docker exec nginx bash - <<'BASH'
-          CURRENT=$(cat /etc/nginx/state/active)
-          if [ "$CURRENT" = "blue" ]; then
-            echo green > /etc/nginx/state/active
-          else
-            echo blue > /etc/nginx/state/active
-          fi
+            STATE=~/repair-crm/state.json
 
-          nginx -s reload
-          BASH
+            ACTIVE=\$(jq -r '.active' \$STATE)
+
+            if [ \"\$ACTIVE\" = \"blue\" ]; then
+              NEW=\"green\"
+            else
+              NEW=\"blue\"
+            fi
+
+            echo \"🔁 switching: \$ACTIVE → \$NEW\"
+
+            # атомарно обновляем state НА СЕРВЕРЕ
+            tmp=\$(mktemp)
+
+            jq --arg v \"\$NEW\" '.active = \$v' \$STATE > \$tmp \
+              && mv \$tmp \$STATE
+
+            echo \"STATE updated\"
+          "
+
+      - name: Reload nginx
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            docker exec nginx nginx -s reload
           "
 
       - name: Post-switch smoke + soak healthcheck
+        id: smoke
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
@@ -201,25 +228,22 @@ jobs:
               http://127.0.0.1/health
 
             echo 'SOAK OK'
-          "      
+          "    
 
-      - name: Commit state + cleanup inactive
+      - name: Rollback on failure
+        if: steps.smoke.outcome == 'failure'
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            set -e
+            python3 ~/repair-crm/rollback.py
+          "
+
+      - name: Cleanup inactive container
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
-            echo '=== BACKUP OLD STATE ==='
-            cp ~/repair-crm/state.json ~/repair-crm/state.backup.json || true
-          "
-
-          echo '=== UPLOAD NEW STATE ==='
-          scp state.json \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
-
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            set -e
-
-            echo '=== READ NEW STATE ==='
+            echo '=== READ ACTUAL STATE ==='
             ACTIVE=\$(cat ~/repair-crm/state.json | jq -r .active)
 
             if [ \"\$ACTIVE\" = \"blue\" ]; then
