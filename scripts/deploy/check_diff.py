@@ -12,8 +12,8 @@ def load_state():
 def main():
     state = load_state()
 
-    blue = state["services"]["gateway-blue"]["image"]
-    green = state["services"]["gateway-green"]["image"]
+    blue = state["gateway-blue"]
+    green = state["gateway-green"]
     active = state.get("active")
 
     changed = blue != green
