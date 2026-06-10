@@ -56,10 +56,6 @@ def latest_image(service: str) -> str:
 
         print("TAGS:", tags)
 
-        # FIX 1 (оставлен как у тебя был)
-        if "latest" in tags:
-            return f"ghcr.io/{OWNER}/repair-crm-{service}:latest"
-
         sha_tags = [tag for tag in tags if tag != "latest"]
 
         if sha_tags:
