@@ -3,7 +3,7 @@ import subprocess
 import time
 import sys
 
-STATE_FILE = "/home/repair-crm/state.json"
+STATE_FILE = "~/repair-crm/state.json"
 NGINX_CONTAINER = "nginx"
 
 
