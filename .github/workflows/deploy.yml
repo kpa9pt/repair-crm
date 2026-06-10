@@ -234,10 +234,8 @@ jobs:
       - name: Rollback on failure
         if: steps.smoke.outcome == 'failure'
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            set -e
-            python3 ~/repair-crm/scripts/rollback.py
-          "
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "python3 -" < scripts/rollback.py
 
       - name: Cleanup inactive container
         run: |
