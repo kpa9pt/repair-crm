@@ -3,7 +3,9 @@ import subprocess
 import time
 import sys
 
-STATE_FILE = "~/repair-crm/state.json"
+from pathlib import Path
+
+STATE_FILE = Path.home() / "repair-crm" / "state.json"
 NGINX_CONTAINER = "nginx"
 
 
