@@ -18,7 +18,7 @@ print("TOKEN EXISTS:", bool(TOKEN))
 print("TOKEN PREFIX:", TOKEN[:6] if TOKEN else None)
 
 HEADERS = {
-    "Authorization": f"Bearer {TOKEN}",
+    "Authorization": f"token {TOKEN}",
     "Accept": "application/vnd.github+json",
 }
 
