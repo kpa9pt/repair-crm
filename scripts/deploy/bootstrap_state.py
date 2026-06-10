@@ -35,11 +35,14 @@ def latest_image(service: str) -> str:
     for version in versions:
         tags = version["metadata"]["container"]["tags"]
 
+        # FIX 1: сначала проверяем latest (это главный источник истины)
+        if "latest" in tags:
+            return f"ghcr.io/{OWNER}/repair-crm-{service}:latest"
+
         sha_tags = [tag for tag in tags if tag != "latest"]
 
         if sha_tags:
             sha = sha_tags[0]
-
             return f"ghcr.io/{OWNER}/repair-crm-{service}:{sha}"
 
     raise RuntimeError(f"No sha tag found for {service}")
