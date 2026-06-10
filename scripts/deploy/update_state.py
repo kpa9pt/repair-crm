@@ -1,9 +1,12 @@
 import json
+import os
 
 STATE_PATH = "state.json"
 CHANGES_PATH = "images.json"
 
 OWNER = "kpa9pt"
+
+DEPLOY_ID = os.getenv("DEPLOY_ID")
 
 
 def load(path):
@@ -14,7 +17,11 @@ def load(path):
 state = load(STATE_PATH)
 changes = load(CHANGES_PATH)
 
-active = state.get("active", "blue")
+state["deploy_id"] = DEPLOY_ID
+
+gateway = state["services"]["gateway"]
+
+active = gateway["active"]
 inactive = "green" if active == "blue" else "blue"
 
 
@@ -26,9 +33,9 @@ for service, sha in changes.items():
 
     if service == "gateway":
         # обновляем только inactive сторону
-        state[f"gateway-{inactive}"] = build_image(service, sha)
+        gateway[inactive]["image"] = build_image(service, sha)
     else:
-        state[service] = build_image(service, sha)
+        state["services"][service]["image"] = build_image(service, sha)
 
 
 print(json.dumps(state, indent=2))

@@ -12,24 +12,22 @@ def load_state():
 def main():
     state = load_state()
 
-    blue = state["gateway-blue"]
-    green = state["gateway-green"]
-    active = state.get("active")
+    gateway = state["services"]["gateway"]
 
-    changed = blue != green
+    active = gateway["active"]
+    target = "green" if active == "blue" else "blue"
 
-    # target логика (на будущее пригодится)
-    if active == "blue":
-        target = "green"
-    else:
-        target = "blue"
+    active_image = gateway[active]["image"]
+    target_image = gateway[target]["image"]
+
+    changed = active_image != target_image
 
     result = {
         "changed": changed,
         "active": active,
         "target": target,
-        "blue": blue,
-        "green": green,
+        "active_image": active_image,
+        "target_image": target_image,
     }
 
     # GitHub Actions output
