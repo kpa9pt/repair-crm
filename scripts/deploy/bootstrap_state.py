@@ -13,6 +13,10 @@ SERVICES = [
 
 TOKEN = os.environ["GHCR_READ_TOKEN"]
 
+# 🔥 DEBUG 1: проверяем что токен вообще есть и не пустой
+print("TOKEN EXISTS:", bool(TOKEN))
+print("TOKEN PREFIX:", TOKEN[:6] if TOKEN else None)
+
 HEADERS = {
     "Authorization": f"Bearer {TOKEN}",
     "Accept": "application/vnd.github+json",
@@ -27,15 +31,32 @@ def latest_image(service: str) -> str:
         f"{OWNER}/packages/container/repair-crm-{service}/versions"
     )
 
+    print(f"\n--- SERVICE: {service} ---")
+    print("URL:", url)
+
     response = requests.get(url, headers=HEADERS)
+
+    # 🔥 DEBUG 2: статус ответа
+    print("STATUS:", response.status_code)
+
+    # 🔥 DEBUG 3: если упало — покажем текст
+    if response.status_code != 200:
+        print("ERROR BODY:", response.text[:500])
+
     response.raise_for_status()
 
     versions = response.json()
 
+    # 🔥 DEBUG 4: сколько версий пришло
+    print("VERSIONS COUNT:", len(versions))
+
     for version in versions:
+        # ❗ оставили как у тебя было (НЕ трогаем логику)
         tags = version["metadata"]["container"]["tags"]
 
-        # FIX 1: сначала проверяем latest (это главный источник истины)
+        print("TAGS:", tags)
+
+        # FIX 1 (оставлен как у тебя был)
         if "latest" in tags:
             return f"ghcr.io/{OWNER}/repair-crm-{service}:latest"
 
@@ -61,7 +82,6 @@ state = {
 gateway_image = latest_image("gateway")
 
 state["services"]["gateway"]["blue"] = {"image": gateway_image}
-
 state["services"]["gateway"]["green"] = {"image": gateway_image}
 
 for service in [
