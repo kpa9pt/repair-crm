@@ -236,7 +236,7 @@ jobs:
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
-            python3 ~/repair-crm/rollback.py
+            python3 ~/repair-crm/scripts/rollback.py
           "
 
       - name: Cleanup inactive container
