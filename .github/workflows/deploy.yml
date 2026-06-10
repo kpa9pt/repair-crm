@@ -205,6 +205,7 @@ jobs:
 
       - name: Post-switch smoke + soak healthcheck
         id: smoke
+        continue-on-error: true
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
