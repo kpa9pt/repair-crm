@@ -24,6 +24,9 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
+      - name: Set deploy id
+        run: echo "DEPLOY_ID=${{ github.event.workflow_run.id }}" >> $GITHUB_ENV
+
       - name: Check state file
         id: state
         run: |
@@ -42,14 +45,14 @@ jobs:
 
 
       - name: Bootstrap state
-#        if: steps.state.outputs.exists == 'false'
+        if: steps.state.outputs.exists == 'false'
         env:
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
         run: |
           python scripts/deploy/bootstrap_state.py > state.json
 
       - name: Upload state
-#        if: steps.state.outputs.exists == 'false'
+        if: steps.state.outputs.exists == 'false'
         run: |
           scp state.json \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
@@ -117,7 +120,7 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
-            ACTIVE=\$(cat ~/repair-crm/state.json | jq -r .active)
+            ACTIVE=\$(cat ~/repair-crm/state.json | jq -r '.services.gateway.active')
 
             if [ \"\$ACTIVE\" = \"blue\" ]; then
               SERVICE=\"gateway-blue\"
@@ -146,7 +149,7 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} <<'SSH'
           set -e
 
-          ACTIVE=$(cat ~/repair-crm/state.json | jq -r .active)
+          ACTIVE=$(cat ~/repair-crm/state.json | jq -r '.services.gateway.active')
 
           if [ "$ACTIVE" = "blue" ]; then
             INACTIVE="green"
@@ -178,7 +181,7 @@ jobs:
 
             STATE=~/repair-crm/state.json
 
-            ACTIVE=\$(jq -r '.active' \$STATE)
+            ACTIVE=\$(jq -r '.services.gateway.active' \$STATE)
 
             if [ \"\$ACTIVE\" = \"blue\" ]; then
               NEW=\"green\"
@@ -191,7 +194,7 @@ jobs:
             # атомарно обновляем state НА СЕРВЕРЕ
             tmp=\$(mktemp)
 
-            jq --arg v \"\$NEW\" '.active = \$v' \$STATE > \$tmp \
+            jq --arg v \"\$NEW\" '.services.gateway.active = \$v' \$STATE > \$tmp \
               && mv \$tmp \$STATE
 
             echo \"STATE updated\"
@@ -243,7 +246,7 @@ jobs:
             set -e
 
             echo '=== READ ACTUAL STATE ==='
-            ACTIVE=\$(cat ~/repair-crm/state.json | jq -r .active)
+            ACTIVE=\$(cat ~/repair-crm/state.json | jq -r '.services.gateway.active')
 
             if [ \"\$ACTIVE\" = \"blue\" ]; then
               INACTIVE=\"green\"

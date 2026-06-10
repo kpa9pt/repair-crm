@@ -6,29 +6,23 @@ STATE_FILE = os.environ.get("STATE_FILE", "state.json")
 with open(STATE_FILE) as f:
     state = json.load(f)
 
-active = state.get("active", "blue")
-inactive = "green" if active == "blue" else "blue"
-
-blue_green = {"gateway"}
-
 yaml = ["services:"]
 
-# gateway blue/green
-if "gateway-blue" in state:
-    yaml.append("  gateway-blue:")
-    yaml.append(f"    image: {state['gateway-blue']}")
+for service_name, config in state["services"].items():
 
-if "gateway-green" in state:
-    yaml.append("  gateway-green:")
-    yaml.append(f"    image: {state['gateway-green']}")
+    strategy = config["strategy"]
 
-# остальные сервисы
-for service, image in state.items():
+    if strategy == "blue-green":
 
-    if service in ["active", "gateway-blue", "gateway-green", "stable"]:
-        continue
+        yaml.append(f"  {service_name}-blue:")
+        yaml.append(f"    image: {config['blue']['image']}")
 
-    yaml.append(f"  {service}:")
-    yaml.append(f"    image: {image}")
+        yaml.append(f"  {service_name}-green:")
+        yaml.append(f"    image: {config['green']['image']}")
+
+    elif strategy == "single":
+
+        yaml.append(f"  {service_name}:")
+        yaml.append(f"    image: {config['image']}")
 
 print("\n".join(yaml))

@@ -18,6 +18,8 @@ HEADERS = {
     "Accept": "application/vnd.github+json",
 }
 
+DEPLOY_ID = os.getenv("DEPLOY_ID", "bootstrap")
+
 
 def latest_image(service: str) -> str:
     url = (
@@ -44,20 +46,29 @@ def latest_image(service: str) -> str:
 
 
 state = {
-    "active": "blue",
-    "stable": "blue",
+    "deploy_id": DEPLOY_ID,
+    "services": {
+        "gateway": {
+            "strategy": "blue-green",
+            "active": "blue",
+        }
+    },
 }
 
 gateway_image = latest_image("gateway")
 
-state["gateway-blue"] = gateway_image
-state["gateway-green"] = gateway_image
+state["services"]["gateway"]["blue"] = {"image": gateway_image}
+
+state["services"]["gateway"]["green"] = {"image": gateway_image}
 
 for service in [
     "nginx",
     "certbot",
     "migrations",
 ]:
-    state[service] = latest_image(service)
+    state["services"][service] = {
+        "strategy": "single",
+        "image": latest_image(service),
+    }
 
 print(json.dumps(state, indent=2))
