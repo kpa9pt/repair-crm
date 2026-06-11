@@ -31,7 +31,7 @@ jobs:
         id: state
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            mkdir -p ~/repair-crm
+            mkdir -p ~/repair-crm/state
 
             if [ -f ~/repair-crm/state/state.json ]; then
               echo 'exists=true'
