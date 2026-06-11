@@ -1,6 +1,8 @@
 FROM nginx:alpine
 
-RUN apk add --no-cache gettext inotify-tools bash
+RUN apk add --no-cache gettext inotify-tools bash jq
+
+
 
 COPY services/nginx/nginx-https.conf /etc/nginx/nginx-https.conf
 COPY services/nginx/nginx-http.conf /etc/nginx/nginx-http.conf

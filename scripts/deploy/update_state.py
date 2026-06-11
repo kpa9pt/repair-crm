@@ -19,11 +19,6 @@ changes = load(CHANGES_PATH)
 
 state["deploy_id"] = DEPLOY_ID
 
-gateway = state["services"]["gateway"]
-
-active = gateway["active"]
-inactive = "green" if active == "blue" else "blue"
-
 
 def build_image(service, sha):
     return f"ghcr.io/{OWNER}/repair-crm-{service}:{sha}"
@@ -31,11 +26,20 @@ def build_image(service, sha):
 
 for service, sha in changes.items():
 
-    if service == "gateway":
-        # обновляем только inactive сторону
-        gateway[inactive]["image"] = build_image(service, sha)
+    service_state = state["services"][service]
+
+    image = build_image(service, sha)
+
+    if service_state["strategy"] == "blue-green":
+
+        active = service_state["active"]
+        inactive = "green" if active == "blue" else "blue"
+
+        service_state[inactive]["image"] = image
+
     else:
-        state["services"][service]["image"] = build_image(service, sha)
+
+        service_state["image"] = image
 
 
 print(json.dumps(state, indent=2))

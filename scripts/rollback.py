@@ -2,11 +2,17 @@ import json
 import subprocess
 import time
 import sys
+import os
 
 from pathlib import Path
 
 STATE_FILE = Path.home() / "repair-crm" / "state.json"
 NGINX_CONTAINER = "nginx"
+
+service = os.environ["ROLLBACK_SERVICE"]
+
+if not service:
+    raise RuntimeError("ROLLBACK_SERVICE not set")
 
 
 def load_state():
@@ -26,10 +32,10 @@ def opposite(active: str) -> str:
 
 
 def service_name(slot: str) -> str:
-    return f"gateway-{slot}"
+    return f"{service}-{slot}"
 
 
-def wait_health(container: str, retries=30, delay=2):
+def wait_health(container: str, port: int, healthcheck: str, retries=30, delay=2):
     print(f"⏳ Waiting health: {container}")
 
     for i in range(retries):
@@ -44,7 +50,7 @@ def wait_health(container: str, retries=30, delay=2):
                     (
                         "import urllib.request;"
                         "urllib.request.urlopen("
-                        "'http://localhost:8000/health', timeout=2"
+                        f"'http://localhost:{port}{healthcheck}', timeout=2"
                         ")"
                     ),
                 ],
@@ -73,7 +79,16 @@ def reload_nginx():
 def main():
     state = load_state()
 
-    active = state.get("active", "blue")
+    service_state = state["services"][service]
+
+    port = service_state.get("port", 8000)
+    healthcheck = service_state.get("healthcheck", "/health")
+
+    if service_state["strategy"] == "single":
+        print("single strategy rollback not supported")
+        sys.exit(1)
+
+    active = service_state["active"]
     target = opposite(active)
 
     target_container = service_name(target)
@@ -84,12 +99,16 @@ def main():
     subprocess.run(["docker", "compose", "up", "-d", service_name(target)], check=True)
 
     # 2. healthcheck
-    if not wait_health(target_container):
+    if not wait_health(
+        target_container,
+        port,
+        healthcheck,
+    ):
         print("❌ rollback failed: target unhealthy")
         sys.exit(1)
 
     # 3. switch active
-    state["active"] = target
+    state["services"][service]["active"] = target
     save_state(state)
 
     # 4. reload nginx

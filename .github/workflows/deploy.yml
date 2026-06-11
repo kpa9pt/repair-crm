@@ -75,6 +75,16 @@ jobs:
           scp state.json \
               ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
 
+      - name: Lock rollback
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            tmp=\$(mktemp)
+
+            jq '.rollback_locked = true' \
+              ~/repair-crm/state.json > \$tmp \
+              && mv \$tmp ~/repair-crm/state.json
+          "
+
       - name: Check if deploy needed
         id: diff
         run: |
@@ -234,11 +244,23 @@ jobs:
             echo 'SOAK OK'
           "    
 
+      - name: Unlock rollback
+        if: steps.smoke.outcome == 'success'
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            tmp=\$(mktemp)
+
+            jq '.rollback_locked = false' \
+              ~/repair-crm/state.json > \$tmp \
+              && mv \$tmp ~/repair-crm/state.json
+          "
+
       - name: Rollback on failure
         if: steps.smoke.outcome == 'failure'
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "python3 -" < scripts/rollback.py
+            "ROLLBACK_SERVICE=gateway python3 -" \
+            < scripts/deploy/rollback.py
 
       - name: Cleanup inactive container
         run: |
