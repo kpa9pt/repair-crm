@@ -38,7 +38,7 @@ services:
     volumes:
       - certbot_conf:/etc/letsencrypt
       - certbot_web:/var/www/certbot
-      - ./state.json:/etc/nginx/state/state.json:ro
+      - ./state:/etc/nginx/state
     healthcheck:
 #      test: [ "CMD", "curl", "-f", "http://localhost/.well-known/acme-challenge/healthcheck" ]
       test: [ "CMD", "nginx", "-t" ]  # проверяет только конфиг

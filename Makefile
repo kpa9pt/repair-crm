@@ -13,6 +13,7 @@ check-env:
 		fi \
 	fi
 
+
 up: check-env
 		docker-compose up -d
 

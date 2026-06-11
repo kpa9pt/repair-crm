@@ -68,10 +68,13 @@ def latest_image(service: str) -> str:
 
 state = {
     "deploy_id": DEPLOY_ID,
+    "rollback_locked": False,
     "services": {
         "gateway": {
             "strategy": "blue-green",
             "active": "blue",
+            "port": 8000,
+            "healthcheck": "/health",
         }
     },
 }

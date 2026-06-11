@@ -1,23 +1,29 @@
 #!/bin/sh
 set -e
 
-STATE=$(cat /etc/nginx/state/active 2>/dev/null || echo "blue")
+STATE_FILE=/etc/nginx/state/state.json
 
-echo "[RENDER] state=$STATE"
+mkdir -p /etc/nginx/upstreams
 
-case "$STATE" in
-  green)
-    SERVER="gateway-green:8000"
-    ;;
-  *)
-    SERVER="gateway-blue:8000"
-    ;;
-esac
+rm -f /etc/nginx/upstreams/*.conf 2>/dev/null || true
 
-cat > /etc/nginx/upstream.conf <<EOF
-upstream gateway_backend {
-  server $SERVER max_fails=3 fail_timeout=10s;
+echo "[RENDER] state=$STATE_FILE"
+
+jq -r '
+  .services
+  | to_entries[]
+  | select(.value.strategy == "blue-green")
+  | "\(.key) \(.value.active) \(.value.port)"
+' "$STATE_FILE" |
+while read SERVICE ACTIVE PORT
+do
+
+cat > "/etc/nginx/upstreams/upstream.conf" <<EOF
+upstream ${SERVICE}_backend {
+  server ${SERVICE}-${ACTIVE}:${PORT} max_fails=3 fail_timeout=10s;
 }
 EOF
 
-echo "[RENDER] upstream -> $SERVER"
+echo "[RENDER] ${SERVICE} -> ${SERVICE}-${ACTIVE}:${PORT}"
+
+done
