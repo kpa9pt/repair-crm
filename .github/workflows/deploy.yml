@@ -33,7 +33,7 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             mkdir -p ~/repair-crm
 
-            if [ -f ~/repair-crm/state.json ]; then
+            if [ -f ~/repair-crm/state/state.json ]; then
               echo 'exists=true'
             else
               echo 'exists=false'
@@ -46,7 +46,7 @@ jobs:
       - name: State for runner
         if: steps.state.outputs.exists == 'true'
         run: |
-          scp ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json ./state.json
+          scp ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json ./state.json
 
 
       - name: Bootstrap state
@@ -60,7 +60,7 @@ jobs:
         if: steps.state.outputs.exists == 'false'
         run: |
           scp state.json \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
 
       - name: Download images artifact
         run: |
@@ -78,7 +78,7 @@ jobs:
       - name: Sync state to server (always)
         run: |
           scp state.json \
-              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
 
       - name: Lock rollback
         run: |
@@ -86,8 +86,8 @@ jobs:
             tmp=\$(mktemp)
 
             jq '.rollback_locked = true' \
-              ~/repair-crm/state.json > \$tmp \
-              && mv \$tmp ~/repair-crm/state.json
+              ~/repair-crm/state/state.json > \$tmp \
+              && mv \$tmp ~/repair-crm/state/state.json
           "
 
       - name: Check if deploy needed
@@ -135,7 +135,7 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
-            ACTIVE=\$(cat ~/repair-crm/state.json | jq -r '.services.gateway.active')
+            ACTIVE=\$(cat ~/repair-crm/state/state.json | jq -r '.services.gateway.active')
 
             if [ \"\$ACTIVE\" = \"blue\" ]; then
               SERVICE=\"gateway-blue\"
@@ -164,7 +164,7 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} <<'SSH'
           set -e
 
-          ACTIVE=$(cat ~/repair-crm/state.json | jq -r '.services.gateway.active')
+          ACTIVE=$(cat ~/repair-crm/state/state.json | jq -r '.services.gateway.active')
 
           if [ "$ACTIVE" = "blue" ]; then
             INACTIVE="green"
@@ -194,7 +194,7 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             set -e
 
-            STATE=~/repair-crm/state.json
+            STATE=~/repair-crm/state/state.json
 
             ACTIVE=\$(jq -r '.services.gateway.active' \$STATE)
 
@@ -256,8 +256,8 @@ jobs:
             tmp=\$(mktemp)
 
             jq '.rollback_locked = false' \
-              ~/repair-crm/state.json > \$tmp \
-              && mv \$tmp ~/repair-crm/state.json
+              ~/repair-crm/state/state.json > \$tmp \
+              && mv \$tmp ~/repair-crm/state/state.json
           "
 
       - name: Rollback on failure
@@ -265,7 +265,7 @@ jobs:
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "ROLLBACK_SERVICE=gateway python3 -" \
-            < scripts/deploy/rollback.py
+            < scripts/rollback.py
 
       - name: Cleanup inactive container
         run: |
@@ -273,7 +273,7 @@ jobs:
             set -e
 
             echo '=== READ ACTUAL STATE ==='
-            ACTIVE=\$(cat ~/repair-crm/state.json | jq -r '.services.gateway.active')
+            ACTIVE=\$(cat ~/repair-crm/state/state.json | jq -r '.services.gateway.active')
 
             if [ \"\$ACTIVE\" = \"blue\" ]; then
               INACTIVE=\"green\"
