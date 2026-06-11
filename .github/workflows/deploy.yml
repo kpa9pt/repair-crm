@@ -218,7 +218,7 @@ jobs:
       - name: Reload nginx
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            docker exec nginx nginx -s reload
+            docker exec nginx /scripts/reload.sh
           "
 
       - name: Post-switch smoke + soak healthcheck
