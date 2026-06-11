@@ -43,6 +43,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: State for runner
+        if: steps.state.outputs.exists == 'true'
+        run: |
+          scp ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state.json ./state.json
+
 
       - name: Bootstrap state
         if: steps.state.outputs.exists == 'false'
