@@ -6,11 +6,10 @@ import os
 
 from pathlib import Path
 
-STATE_FILE = Path.home() / "repair-crm/state" / "state.json"
+STATE_FILE = Path.home() / "repair-crm" / "state" / "state.json"
 NGINX_CONTAINER = "nginx"
 
-service = os.environ["ROLLBACK_SERVICE"]
-
+service = os.getenv("ROLLBACK_SERVICE")
 if not service:
     raise RuntimeError("ROLLBACK_SERVICE not set")
 
@@ -96,7 +95,13 @@ def main():
     print(f"🔄 rollback: {active} → {target}")
 
     # 1. start target
-    subprocess.run(["docker", "compose", "up", "-d", service_name(target)], check=True)
+    WORKDIR = Path.home() / "repair-crm"
+
+    subprocess.run(
+        ["docker", "compose", "up", "-d", f"{target_container}"],
+        cwd=WORKDIR,
+        check=True,
+    )
 
     # 2. healthcheck
     if not wait_health(
