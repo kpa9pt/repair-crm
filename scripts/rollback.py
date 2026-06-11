@@ -70,7 +70,7 @@ def wait_health(container: str, port: int, healthcheck: str, retries=30, delay=2
 def reload_nginx():
     print("🔁 reloading nginx")
     subprocess.run(
-        ["docker", "exec", NGINX_CONTAINER, "nginx", "-s", "reload"],
+        ["docker", "exec", NGINX_CONTAINER, "/scripts/reload.sh"],
         check=True,
     )
 
