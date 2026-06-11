@@ -6,7 +6,7 @@ import os
 
 from pathlib import Path
 
-STATE_FILE = Path.home() / "repair-crm" / "state.json"
+STATE_FILE = Path.home() / "repair-crm/state" / "state.json"
 NGINX_CONTAINER = "nginx"
 
 service = os.environ["ROLLBACK_SERVICE"]
