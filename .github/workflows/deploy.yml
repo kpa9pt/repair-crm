@@ -101,7 +101,8 @@ jobs:
 
       - name: Save deploy plan
         run: |
-          echo "DEPLOY_PLAN=$(cat deploy_plan.json)" >> $GITHUB_ENV
+          PLAN=$(cat deploy_plan.json | jq -c . | base64 -w0)
+          echo "DEPLOY_PLAN=$PLAN" >> $GITHUB_ENV
 
       - name: Debug DEPLOY_PLAN content
         run: |
@@ -149,7 +150,7 @@ jobs:
       - name: Verify ACTIVE services
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "python3 - '${{ env.DEPLOY_PLAN }}'" \
+            "DEPLOY_PLAN='${{ env.DEPLOY_PLAN }}' python3 -" \
             < scripts/deploy/verify_services.py
 
       - name: Wait for new services healthcheck
