@@ -23,21 +23,13 @@ def healthcheck(container, port, health):
     return subprocess.run(cmd).returncode == 0
 
 
+def load_deploy_plan():
+    plan = os.environ["DEPLOY_PLAN"]
+    return json.loads(base64.b64decode(plan).decode())
+
+
 def main():
-    # === ДЕБАГ ===
-    print(f"DEBUG: sys.argv = {sys.argv}")
-
-    # Получаем base64 из переменной окружения
-    plan = os.environ.get("DEPLOY_PLAN", "")
-    print(f"DEBUG: DEPLOY_PLAN = {repr(plan)}")
-
-    # Декодируем
-    deploy_plan_str = base64.b64decode(plan).decode()
-    print(f"DEBUG: decoded = {repr(deploy_plan_str)}")
-
-    deploy_plan = json.loads(deploy_plan_str)
-    print(f"DEBUG: parsed = {deploy_plan}")
-    # === КОНЕЦ ДЕБАГА ===
+    deploy_plan = load_deploy_plan()
 
     state_file = Path.home() / "repair-crm" / "state" / "state.json"
 
