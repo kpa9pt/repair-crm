@@ -80,16 +80,6 @@ jobs:
           scp state.json \
               ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
 
-      - name: Lock rollback
-        run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            tmp=\$(mktemp)
-
-            jq '.rollback_locked = true' \
-              ~/repair-crm/state/state.json > \$tmp \
-              && mv \$tmp ~/repair-crm/state/state.json
-          "
-
       - name: Check if deploy needed
         id: diff
         run: |
@@ -111,6 +101,12 @@ jobs:
           echo "=== HEX ==="
           echo -n "${{ env.DEPLOY_PLAN }}" | od -c
           echo "=== END ==="
+
+      - name: Lock rollback (per service)
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "DEPLOY_PLAN='${{ env.DEPLOY_PLAN }}' python3 -" \
+            < scripts/deploy/lock_rollback.py
 
       - name: Generate compose override
         run: |
