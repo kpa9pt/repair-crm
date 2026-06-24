@@ -106,6 +106,13 @@ jobs:
           cat deploy_plan.json | jq -c . >> $GITHUB_ENV
           echo "$EOF" >> $GITHUB_ENV
 
+      - name: Debug DEPLOY_PLAN content
+        run: |
+          echo "=== DEPLOY_PLAN content ==="
+          echo "${{ env.DEPLOY_PLAN }}"
+          echo "=== END ==="
+          echo "Length: ${#DEPLOY_PLAN}"
+
       - name: Generate compose override
         run: |
           STATE_FILE=state.json 
