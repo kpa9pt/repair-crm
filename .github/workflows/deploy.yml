@@ -156,13 +156,13 @@ jobs:
       - name: Wait for new services healthcheck
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "python3 - '${{ env.DEPLOY_PLAN }}'" \
+            "DEPLOY_PLAN_B64='${{ env.DEPLOY_PLAN_B64 }}' python3 -" \
             < scripts/deploy/verify_inactive_services.py
 
       - name: Switch traffic (state-driven)
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "python3 - '${{ env.DEPLOY_PLAN }}'" \
+            "DEPLOY_PLAN_B64='${{ env.DEPLOY_PLAN_B64 }}' python3 -" \
             < scripts/deploy/switch_services.py
 
       - name: Reload nginx

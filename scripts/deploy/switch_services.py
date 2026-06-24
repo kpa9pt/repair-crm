@@ -1,10 +1,15 @@
 import json
 import sys
+import os
+import base64
 from pathlib import Path
 
 
 def main():
-    deploy_plan = json.loads(sys.argv[1])
+    # Получаем base64 из переменной окружения
+    plan = os.environ.get("DEPLOY_PLAN", "")
+    deploy_plan_str = base64.b64decode(plan).decode()
+    deploy_plan = json.loads(deploy_plan_str)
 
     if not deploy_plan:
         print("no changes")
