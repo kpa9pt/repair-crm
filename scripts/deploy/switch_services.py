@@ -1,10 +1,15 @@
 import json
 import os
+import sys
 from pathlib import Path
 
 
 def main():
     deploy_plan = json.loads(os.environ["DEPLOY_PLAN"])
+
+    if not deploy_plan:
+        print("no changes")
+        sys.exit(0)
 
     state_file = Path.home() / "repair-crm" / "state" / "state.json"
 
