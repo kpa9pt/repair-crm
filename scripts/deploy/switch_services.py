@@ -1,10 +1,11 @@
 import json
 import sys
+import os
 from pathlib import Path
 
 
 def main():
-    deploy_plan = json.loads(sys.stdin.read())
+    deploy_plan = json.loads(os.environ["DEPLOY_PLAN"])
 
     if not deploy_plan:
         print("no changes")
