@@ -101,10 +101,10 @@ jobs:
 
       - name: Save deploy plan
         run: |
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "DEPLOY_PLAN<<$EOF" >> $GITHUB_ENV
-          cat deploy_plan.json | jq -c . >> $GITHUB_ENV
-          echo "$EOF" >> $GITHUB_ENV
+          PLAN=$(cat deploy_plan.json | jq -c .)
+          echo "DEPLOY_PLAN<<EOF" >> $GITHUB_ENV
+          echo "$PLAN" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Debug DEPLOY_PLAN content
         run: |
