@@ -21,10 +21,14 @@ def healthcheck(container, port, health):
 
 
 def main():
-    data = sys.stdin.buffer.read()
-    print("DEBUG RAW:", repr(data))
+    # === ДЕБАГ: просто смотрим что пришло ===
+    print(f"DEBUG: sys.argv = {sys.argv}")
+    print(f"DEBUG: len(sys.argv) = {len(sys.argv)}")
+    if len(sys.argv) > 1:
+        print(f"DEBUG: sys.argv[1] = {repr(sys.argv[1])}")
 
-    deploy_plan = json.loads(data)
+    deploy_plan = json.loads(sys.argv[1])
+    # === КОНЕЦ ДЕБАГА ===
 
     state_file = Path.home() / "repair-crm" / "state" / "state.json"
 
