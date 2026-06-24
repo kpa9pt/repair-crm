@@ -56,6 +56,7 @@ async def test_blue_green():
     return {"status": "ok"}
 
 
-@app.get("/test_check_diff")
-async def test_check_diff():
-    return {"status": "ok"}
+#
+# @app.get("/test_check_diff")
+# async def test_check_diff():
+#     return {"status": "ok"}

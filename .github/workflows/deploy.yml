@@ -171,33 +171,18 @@ jobs:
             docker exec nginx /scripts/reload.sh
           "
 
-      - name: Post-switch smoke + soak healthcheck
+      - name: Post-switch verify
         id: smoke
         continue-on-error: true
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            set -e
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "DEPLOY_PLAN='${{ env.DEPLOY_PLAN }}' python3 -" \
+            < scripts/deploy/post_switch_verify.py \
+            > post_switch_verify.json
 
-            echo '=== SMOKE CHECK (fast) ==='
-
-            curl -fsS \
-              --retry 30 \
-              --retry-delay 2 \
-              http://127.0.0.1/health
-
-            echo 'SMOKE OK'
-
-            echo '=== SOAK CHECK (delayed) ==='
-
-            sleep 60
-
-            curl -fsS \
-              --retry 10 \
-              --retry-delay 3 \
-              http://127.0.0.1/health
-
-            echo 'SOAK OK'
-          "    
+      - name: Print verify result
+        run: |
+          cat post_switch_verify.json
 
       - name: Unlock rollback
         if: steps.smoke.outcome == 'success'
