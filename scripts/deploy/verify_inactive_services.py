@@ -2,6 +2,8 @@ import json
 import sys
 import subprocess
 import time
+import os
+import base64
 from pathlib import Path
 
 
@@ -22,7 +24,10 @@ def healthcheck(container, port, health):
 
 
 def main():
-    deploy_plan = json.loads(sys.argv[1])
+    # Получаем base64 из переменной окружения
+    plan = os.environ.get("DEPLOY_PLAN", "")
+    deploy_plan_str = base64.b64decode(plan).decode()
+    deploy_plan = json.loads(deploy_plan_str)
 
     state_file = Path.home() / "repair-crm" / "state" / "state.json"
 
