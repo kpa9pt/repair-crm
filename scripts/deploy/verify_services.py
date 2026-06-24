@@ -2,7 +2,6 @@ import json
 import sys
 import subprocess
 import time
-import os
 from pathlib import Path
 
 
@@ -23,16 +22,15 @@ def healthcheck(container, port, health):
 
 
 def main():
-    # Читаем JSON из stdin
-    deploy_plan_str = sys.stdin.read().strip()
-    print(f"DEBUG: deploy_plan_str = {repr(deploy_plan_str)}")
+    # === ДЕБАГ: смотрим что пришло ===
+    print(f"DEBUG: sys.argv = {sys.argv}")
+    print(f"DEBUG: len(sys.argv) = {len(sys.argv)}")
+    if len(sys.argv) > 1:
+        print(f"DEBUG: sys.argv[1] = {repr(sys.argv[1])}")
 
-    if not deploy_plan_str:
-        # Если stdin пустой, пробуем из переменной окружения
-        deploy_plan_str = os.environ.get("DEPLOY_PLAN", "")
-        print(f"DEBUG: fallback to env = {repr(deploy_plan_str)}")
-
-    deploy_plan = json.loads(deploy_plan_str)
+    deploy_plan = json.loads(sys.argv[1])
+    print(f"DEBUG: parsed deploy_plan = {deploy_plan}")
+    # === КОНЕЦ ДЕБАГА ===
 
     state_file = Path.home() / "repair-crm" / "state" / "state.json"
 
