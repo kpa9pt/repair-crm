@@ -153,29 +153,9 @@ jobs:
       - name: Switch traffic (state-driven)
         if: steps.diff.outputs.changed == 'true'
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            set -e
-
-            STATE=~/repair-crm/state/state.json
-
-            ACTIVE=\$(jq -r '.services.gateway.active' \$STATE)
-
-            if [ \"\$ACTIVE\" = \"blue\" ]; then
-              NEW=\"green\"
-            else
-              NEW=\"blue\"
-            fi
-
-            echo \"🔁 switching: \$ACTIVE → \$NEW\"
-
-            # атомарно обновляем state НА СЕРВЕРЕ
-            tmp=\$(mktemp)
-
-            jq --arg v \"\$NEW\" '.services.gateway.active = \$v' \$STATE > \$tmp \
-              && mv \$tmp \$STATE
-
-            echo \"STATE updated\"
-          "
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "DEPLOY_PLAN='${{ env.DEPLOY_PLAN }}' python3 -" \
+            < scripts/deploy/switch_services.py
 
       - name: Reload nginx
         run: |
