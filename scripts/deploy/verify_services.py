@@ -2,6 +2,7 @@ import json
 import sys
 import subprocess
 import time
+import os
 from pathlib import Path
 
 
@@ -22,13 +23,17 @@ def healthcheck(container, port, health):
 
 
 def main():
-    # === ДЕБАГ: просто смотрим что пришло ===
+    # === ДЕБАГ: смотрим что пришло ===
     print(f"DEBUG: sys.argv = {sys.argv}")
     print(f"DEBUG: len(sys.argv) = {len(sys.argv)}")
     if len(sys.argv) > 1:
         print(f"DEBUG: sys.argv[1] = {repr(sys.argv[1])}")
 
-    deploy_plan = json.loads(sys.argv[1])
+    # Проверяем переменную окружения
+    deploy_plan_env = os.environ.get("DEPLOY_PLAN")
+    print(f"DEBUG: DEPLOY_PLAN env = {repr(deploy_plan_env)}")
+
+    deploy_plan = json.loads(os.environ["DEPLOY_PLAN"])
     # === КОНЕЦ ДЕБАГА ===
 
     state_file = Path.home() / "repair-crm" / "state" / "state.json"
