@@ -101,17 +101,15 @@ jobs:
 
       - name: Save deploy plan
         run: |
-          PLAN=$(cat deploy_plan.json | jq -c .)
-          echo "DEPLOY_PLAN<<EOF" >> $GITHUB_ENV
-          echo "$PLAN" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          echo "DEPLOY_PLAN=$(cat deploy_plan.json | jq -c .)" >> $GITHUB_ENV
 
       - name: Debug DEPLOY_PLAN content
         run: |
           echo "=== DEPLOY_PLAN content ==="
           echo "${{ env.DEPLOY_PLAN }}"
+          echo "=== HEX ==="
+          echo -n "${{ env.DEPLOY_PLAN }}" | od -c
           echo "=== END ==="
-          echo "Length: ${#DEPLOY_PLAN}"
 
       - name: Generate compose override
         run: |
