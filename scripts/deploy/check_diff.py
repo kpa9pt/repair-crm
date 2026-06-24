@@ -27,7 +27,8 @@ def main():
         if active_image != inactive_image:
             deploy_plan.append(service_name)
 
-    print(json.dumps(deploy_plan, indent=2))
+    # Убираем indent=2, делаем компактный вывод
+    print(json.dumps(deploy_plan))
 
 
 if __name__ == "__main__":
