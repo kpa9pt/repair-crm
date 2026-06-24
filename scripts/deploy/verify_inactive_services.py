@@ -2,6 +2,7 @@ import json
 import sys
 import subprocess
 import os
+import time
 from pathlib import Path
 
 
@@ -36,31 +37,28 @@ def main():
         s = state["services"][service]
 
         active = s["active"]
+
+        inactive = "green" if active == "blue" else "blue"
+
         port = s.get("port", 8000)
         health = s.get("healthcheck", "/health")
 
-        container = f"{service}-{active}"
+        container = f"{service}-{inactive}"
 
         ok = False
 
         for i in range(60):
             if healthcheck(container, port, health):
-                print(f"✅ {service} healthy")
+                print(f"✅ {container} healthy")
                 ok = True
                 break
 
             print(f"retry {i}")
-            import time
-
             time.sleep(2)
 
         if not ok:
-            print(f"❌ {service} failed")
+            print(f"❌ {container} failed")
             sys.exit(1)
-
-    subprocess.run(["docker", "exec", "nginx", "/scripts/reload.sh"], check=True)
-
-    print("🔁 nginx reloaded")
 
 
 if __name__ == "__main__":

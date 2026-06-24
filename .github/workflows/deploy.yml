@@ -144,34 +144,11 @@ jobs:
             "DEPLOY_PLAN='${{ env.DEPLOY_PLAN }}' python3 -" \
             < scripts/deploy/verify_services.py
 
-      - name: Wait for new service healthcheck
+      - name: Wait for new services healthcheck
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} <<'SSH'
-          set -e
-
-          ACTIVE=$(cat ~/repair-crm/state/state.json | jq -r '.services.gateway.active')
-
-          if [ "$ACTIVE" = "blue" ]; then
-            INACTIVE="green"
-          else
-            INACTIVE="blue"
-          fi
-          
-          echo "LOCAL INACTIVE=[$INACTIVE]"
-
-          docker exec gateway-$INACTIVE python - <<'PY'
-          import urllib.request
-          import sys
-
-          try:
-            urllib.request.urlopen("http://localhost:8000/health", timeout=2)
-          except Exception as e:
-            print("healthcheck failed:", e)
-            sys.exit(1)
-
-          print("healthcheck OK")
-          PY
-          SSH
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "DEPLOY_PLAN='${{ env.DEPLOY_PLAN }}' python3 -" \
+            < scripts/deploy/verify_inactive_services.py
 
       - name: Switch traffic (state-driven)
         if: steps.diff.outputs.changed == 'true'
