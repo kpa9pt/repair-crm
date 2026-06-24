@@ -101,7 +101,9 @@ jobs:
 
       - name: Save deploy plan
         run: |
-          echo "DEPLOY_PLAN=$(cat deploy_plan.json | jq -c .)" >> $GITHUB_ENV
+          echo "DEPLOY_PLAN<<EOF" >> $GITHUB_ENV
+          cat deploy_plan.json >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Generate compose override
         run: |
