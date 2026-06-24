@@ -23,18 +23,16 @@ def healthcheck(container, port, health):
 
 
 def main():
-    # === ДЕБАГ: смотрим что пришло ===
-    print(f"DEBUG: sys.argv = {sys.argv}")
-    print(f"DEBUG: len(sys.argv) = {len(sys.argv)}")
-    if len(sys.argv) > 1:
-        print(f"DEBUG: sys.argv[1] = {repr(sys.argv[1])}")
+    # Читаем JSON из stdin
+    deploy_plan_str = sys.stdin.read().strip()
+    print(f"DEBUG: deploy_plan_str = {repr(deploy_plan_str)}")
 
-    # Проверяем переменную окружения
-    deploy_plan_env = os.environ.get("DEPLOY_PLAN")
-    print(f"DEBUG: DEPLOY_PLAN env = {repr(deploy_plan_env)}")
+    if not deploy_plan_str:
+        # Если stdin пустой, пробуем из переменной окружения
+        deploy_plan_str = os.environ.get("DEPLOY_PLAN", "")
+        print(f"DEBUG: fallback to env = {repr(deploy_plan_str)}")
 
-    deploy_plan = json.loads(os.environ["DEPLOY_PLAN"])
-    # === КОНЕЦ ДЕБАГА ===
+    deploy_plan = json.loads(deploy_plan_str)
 
     state_file = Path.home() / "repair-crm" / "state" / "state.json"
 
