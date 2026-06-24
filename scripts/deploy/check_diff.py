@@ -1,5 +1,4 @@
 import json
-import sys
 
 STATE_FILE = "state.json"
 
@@ -12,35 +11,23 @@ def load_state():
 def main():
     state = load_state()
 
-    gateway = state["services"]["gateway"]
+    deploy_plan = []
 
-    active = gateway["active"]
-    target = "green" if active == "blue" else "blue"
+    for service_name, service in state["services"].items():
 
-    active_image = gateway[active]["image"]
-    target_image = gateway[target]["image"]
+        if service.get("strategy") != "blue-green":
+            continue
 
-    changed = active_image != target_image
+        active = service["active"]
+        inactive = "green" if active == "blue" else "blue"
 
-    result = {
-        "changed": changed,
-        "active": active,
-        "target": target,
-        "active_image": active_image,
-        "target_image": target_image,
-    }
+        active_image = service[active]["image"]
+        inactive_image = service[inactive]["image"]
 
-    # GitHub Actions output
-    print(f"changed={str(changed).lower()}")
+        if active_image != inactive_image:
+            deploy_plan.append(service_name)
 
-    # (опционально debug)
-    print(json.dumps(result, indent=2), file=sys.stderr)
-
-    if changed:
-        sys.exit(0)
-    else:
-        # важно: НЕ fail job, просто signal
-        sys.exit(0)
+    print(json.dumps(deploy_plan, indent=2))
 
 
 if __name__ == "__main__":
