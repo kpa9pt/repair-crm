@@ -101,7 +101,10 @@ jobs:
 
       - name: Save deploy plan
         run: |
-          echo "DEPLOY_PLAN=$(cat deploy_plan.json | jq -c . | jq @json)" >> $GITHUB_ENV
+          PLAN=$(cat deploy_plan.json | jq -c .)
+          echo "DEPLOY_PLAN<<EOF" >> $GITHUB_ENV
+          echo "$PLAN" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Debug DEPLOY_PLAN content
         run: |
