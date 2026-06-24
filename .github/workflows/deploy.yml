@@ -93,7 +93,15 @@ jobs:
       - name: Check if deploy needed
         id: diff
         run: |
-          python scripts/deploy/check_diff.py
+          python scripts/deploy/check_diff.py > deploy_plan.json
+
+      - name: Print deploy plan
+        run: |
+          cat deploy_plan.json
+
+      - name: Save deploy plan
+        run: |
+          echo "DEPLOY_PLAN=$(cat deploy_plan.json | jq -c .)" >> $GITHUB_ENV
 
       - name: Generate compose override
         run: |
@@ -130,34 +138,10 @@ jobs:
           docker compose up -d
           EOFSSH
 
-      - name: Verify ACTIVE gateway is healthy
+      - name: Verify ACTIVE services
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            set -e
-
-            ACTIVE=\$(cat ~/repair-crm/state/state.json | jq -r '.services.gateway.active')
-
-            if [ \"\$ACTIVE\" = \"blue\" ]; then
-              SERVICE=\"gateway-blue\"
-            else
-              SERVICE=\"gateway-green\"
-            fi
-
-            echo \"🔍 Checking ACTIVE service: \$SERVICE\"
-
-            for i in \$(seq 1 60); do
-              if docker exec \$SERVICE python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" 2>/dev/null; then
-                echo \"✅ ACTIVE service is healthy\"
-                break
-              fi
-
-              echo \"retry \$i...\"
-              sleep 2
-            done
-
-            echo \"🔁 Reloading nginx config to ensure routing stability\"
-            docker exec nginx nginx -s reload
-          "
+          echo '${{ env.DEPLOY_PLAN }}' | ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "python3 /scripts/deploy/verify_services.py"
 
       - name: Wait for new service healthcheck
         run: |
