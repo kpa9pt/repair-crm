@@ -1,6 +1,7 @@
 import json
 import sys
 import subprocess
+import time
 from pathlib import Path
 
 
@@ -56,7 +57,6 @@ def main():
                 break
 
             print(f"retry {i}")
-            import time
 
             time.sleep(2)
 
