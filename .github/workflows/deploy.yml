@@ -149,9 +149,9 @@ jobs:
 
       - name: Verify ACTIVE services
         run: |
-          PLAN=$(echo '${{ env.DEPLOY_PLAN }}' | sed "s/'/'\\\\''/g")
+          echo '${{ env.DEPLOY_PLAN }}' | \
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "DEPLOY_PLAN='$PLAN' python3 -" \
+            "python3 -" \
             < scripts/deploy/verify_services.py
 
       - name: Wait for new services healthcheck
