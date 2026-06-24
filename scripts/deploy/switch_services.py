@@ -5,12 +5,13 @@ import base64
 from pathlib import Path
 
 
-def main():
-    # Получаем base64 из переменной окружения
-    plan = os.environ.get("DEPLOY_PLAN", "")
-    deploy_plan_str = base64.b64decode(plan).decode()
-    deploy_plan = json.loads(deploy_plan_str)
+def load_deploy_plan():
+    plan = os.environ["DEPLOY_PLAN"]
+    return json.loads(base64.b64decode(plan).decode())
 
+
+def main():
+    deploy_plan = load_deploy_plan()
     if not deploy_plan:
         print("no changes")
         sys.exit(0)
