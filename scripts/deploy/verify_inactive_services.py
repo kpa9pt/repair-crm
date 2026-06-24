@@ -2,6 +2,7 @@ import json
 import sys
 import subprocess
 import time
+import os
 from pathlib import Path
 
 
@@ -22,7 +23,7 @@ def healthcheck(container, port, health):
 
 
 def main():
-    deploy_plan = json.loads(sys.stdin.read())
+    deploy_plan = json.loads(os.environ["DEPLOY_PLAN"])
 
     state_file = Path.home() / "repair-crm" / "state" / "state.json"
 

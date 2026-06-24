@@ -21,7 +21,10 @@ def healthcheck(container, port, health):
 
 
 def main():
-    deploy_plan = json.loads(sys.stdin.read())
+
+    data = sys.stdin.read()
+    print("RAW:", repr(data))
+    deploy_plan = json.loads(data)
 
     state_file = Path.home() / "repair-crm" / "state" / "state.json"
 

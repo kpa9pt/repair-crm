@@ -140,18 +140,20 @@ jobs:
 
       - name: Verify ACTIVE services
         run: |
-          echo '${{ env.DEPLOY_PLAN }}' | ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+          printf '%s' '${{ env.DEPLOY_PLAN }}' | ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "python3 -" < scripts/deploy/verify_services.py
 
       - name: Wait for new services healthcheck
         run: |
-         echo '${{ env.DEPLOY_PLAN }}' | ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "python3 -" < scripts/deploy/verify_inactive_services.py
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "DEPLOY_PLAN='${{ env.DEPLOY_PLAN }}' python3 -" \
+            < scripts/deploy/verify_inactive_services.py
 
       - name: Switch traffic (state-driven)
         run: |
-          echo '${{ env.DEPLOY_PLAN }}' | ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "python3 -" < scripts/deploy/switch_services.py
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "DEPLOY_PLAN='${{ env.DEPLOY_PLAN }}' python3 -" \
+            < scripts/deploy/switch_services.py
 
       - name: Reload nginx
         run: |
