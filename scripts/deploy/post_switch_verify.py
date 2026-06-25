@@ -23,6 +23,23 @@ def healthcheck(container, port, health):
     return subprocess.run(cmd).returncode == 0
 
 
+def wait_health(container, port, health, retries=30, delay=2):
+
+    for i in range(retries):
+
+        if healthcheck(container, port, health):
+            return True
+
+        print(
+            f"retry: {i + 1}/{retries}",
+            file=sys.stderr,
+        )
+
+        time.sleep(delay)
+
+    return False
+
+
 def main():
     deploy_plan = json.loads(base64.b64decode(os.environ["DEPLOY_PLAN"]).decode())
 
@@ -38,7 +55,10 @@ def main():
 
     for service in deploy_plan:
 
-        print(f"🔍 post-switch verify: {service}", file=sys.stderr)
+        print(
+            f"🔍 post-switch verify: {service}",
+            file=sys.stderr,
+        )
 
         s = state["services"][service]
 
@@ -48,22 +68,28 @@ def main():
 
         container = f"{service}-{active}"
 
-        ok = False
+        print(
+            f"phase 1 smoke: {service}",
+            file=sys.stderr,
+        )
 
-        for i in range(30):
+        if not wait_health(container, port, health):
+            result["failed"].append(service)
+            continue
 
-            if healthcheck(container, port, health):
-                ok = True
-                break
+        print(
+            f"phase 2 soak sleep: {service}",
+            file=sys.stderr,
+        )
 
-            print(
-                f"retry {service}: {i + 1}/30",
-                file=sys.stderr,
-            )
+        time.sleep(60)
 
-            time.sleep(2)
+        print(
+            f"phase 3 soak verify: {service}",
+            file=sys.stderr,
+        )
 
-        if ok:
+        if wait_health(container, port, health):
             result["passed"].append(service)
         else:
             result["failed"].append(service)
