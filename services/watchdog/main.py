@@ -66,6 +66,7 @@ def trigger_rollback(service):
 
     env = os.environ.copy()
     env["ROLLBACK_SERVICE"] = service
+    env["STATE_PATH"] = STATE_PATH
 
     subprocess.run(["python", "/scripts/rollback.py"], env=env)
 
