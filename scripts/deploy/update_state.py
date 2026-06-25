@@ -26,6 +26,9 @@ def build_image(service, sha):
 
 for service, sha in changes.items():
 
+    if service not in state["services"]:
+        state["services"][service] = {"strategy": "single", "rollback_locked": False}
+
     service_state = state["services"][service]
 
     image = build_image(service, sha)
