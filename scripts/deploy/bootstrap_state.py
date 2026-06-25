@@ -10,6 +10,7 @@ SERVICES = [
     "nginx",
     "certbot",
     "migrations",
+    "watchdog",
 ]
 
 TOKEN = os.environ["GHCR_READ_TOKEN"]
@@ -88,6 +89,7 @@ for service in [
     "nginx",
     "certbot",
     "migrations",
+    "watchdog",
 ]:
     state["services"][service] = {
         "strategy": "single",

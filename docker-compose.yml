@@ -38,7 +38,7 @@ services:
     volumes:
       - certbot_conf:/etc/letsencrypt
       - certbot_web:/var/www/certbot
-      - ./state:/etc/nginx/state:ro
+      - ./state:/etc/nginx/state
     healthcheck:
 #      test: [ "CMD", "curl", "-f", "http://localhost/.well-known/acme-challenge/healthcheck" ]
       test: [ "CMD", "nginx", "-t" ]  # проверяет только конфиг
@@ -91,7 +91,7 @@ services:
     container_name: watchdog
 
     volumes:
-      - ./state:/state:ro
+      - ./state:/state
       - /var/run/docker.sock:/var/run/docker.sock
 
     environment:

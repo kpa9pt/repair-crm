@@ -13,3 +13,6 @@ services:
 
   migrations:
     image: ${MIGRATIONS_IMAGE}
+
+  watchdog:
+    image: ${WATCHDOG_IMAGE}

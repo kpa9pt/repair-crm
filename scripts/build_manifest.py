@@ -1,7 +1,7 @@
 import json
 import os
 
-SERVICES = ["gateway", "migrations", "nginx", "certbot"]
+SERVICES = ["gateway", "migrations", "nginx", "certbot", "watchdog"]
 
 github_sha = os.environ.get("GITHUB_SHA", "")
 

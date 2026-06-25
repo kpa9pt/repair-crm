@@ -13,8 +13,8 @@ cat > "$STATE_FILE" <<EOF
       "strategy": "blue-green",
       "active": "blue",
       "port": 8000,
-      "healthcheck": "/health"
-      "rollback_locked": false,
+      "healthcheck": "/health",
+      "rollback_locked": false
     }
   }
 }
