@@ -80,16 +80,6 @@ jobs:
           scp state.json \
               ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
 
-      - name: Lock rollback
-        run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            tmp=\$(mktemp)
-
-            jq '.rollback_locked = true' \
-              ~/repair-crm/state/state.json > \$tmp \
-              && mv \$tmp ~/repair-crm/state/state.json
-          "
-
       - name: Check if deploy needed
         id: diff
         run: |
@@ -111,6 +101,12 @@ jobs:
           echo "=== HEX ==="
           echo -n "${{ env.DEPLOY_PLAN }}" | od -c
           echo "=== END ==="
+
+      - name: Lock rollback (per service)
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "DEPLOY_PLAN='${{ env.DEPLOY_PLAN }}' python3 -" \
+            < scripts/deploy/lock_rollback.py
 
       - name: Generate compose override
         run: |
@@ -172,8 +168,6 @@ jobs:
           "
 
       - name: Post-switch verify
-        id: smoke
-        continue-on-error: true
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "DEPLOY_PLAN='${{ env.DEPLOY_PLAN }}' python3 -" \
@@ -184,23 +178,27 @@ jobs:
         run: |
           cat post_switch_verify.json
 
-      - name: Unlock rollback
-        if: steps.smoke.outcome == 'success'
+      - name: Save rollback decision (runner-only)
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            tmp=\$(mktemp)
+          cat post_switch_verify.json | jq -c . > rollback_decision.json
 
-            jq '.rollback_locked = false' \
-              ~/repair-crm/state/state.json > \$tmp \
-              && mv \$tmp ~/repair-crm/state/state.json
-          "
+          ROLLBACK=$(cat rollback_decision.json | base64 -w0)
+          echo "ROLLBACK_DECISION=$ROLLBACK" >> $GITHUB_ENV
 
-      - name: Rollback on failure
-        if: steps.smoke.outcome == 'failure'
+      - name: Unlock rollback
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "ROLLBACK_SERVICE=gateway python3 -" \
-            < scripts/rollback.py
+            "ROLLBACK_DECISION='${{ env.ROLLBACK_DECISION }}' python3 -" \
+            < scripts/deploy/unlock_rollback.py
+
+      - name: Rollback engine
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          ROLLBACK_DECISION: ${{ env.ROLLBACK_DECISION }}
+        run: |
+          python scripts/deploy/run_rollbacks.py
+          
 
       - name: Cleanup inactive container
         run: |
