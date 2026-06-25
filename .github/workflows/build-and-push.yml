@@ -38,6 +38,10 @@ jobs:
 
             certbot:
               - 'services/certbot/**'
+            
+            watchdog:
+              - 'services/watchdog/**'
+              - 'scripts/rollback.py'
 
       - name: Print detected changes
         run: |
@@ -45,6 +49,7 @@ jobs:
           echo "migrations=${{ steps.changes.outputs.migrations }}"
           echo "nginx=${{ steps.changes.outputs.nginx }}"
           echo "certbot=${{ steps.changes.outputs.certbot }}"
+          echo "watchdog=${{ steps.changes.outputs.watchdog }}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -101,6 +106,17 @@ jobs:
             ghcr.io/${{ github.repository }}-certbot:latest
             ghcr.io/${{ github.repository }}-certbot:${{ github.sha }}
 
+      - name: Build and push watchdog
+        if: steps.changes.outputs.watchdog == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/watchdog/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-watchdog:latest
+            ghcr.io/${{ github.repository }}-watchdog:${{ github.sha }}
+
       - name: Build image manifest
         run: |
           python scripts/build_manifest.py > images.json
@@ -109,6 +125,8 @@ jobs:
           CHANGED_MIGRATIONS: ${{ steps.changes.outputs.migrations }}
           CHANGED_NGINX: ${{ steps.changes.outputs.nginx }}
           CHANGED_CERTBOT: ${{ steps.changes.outputs.certbot }}
+          CHANGED_WATCHDOG: ${{ steps.changes.outputs.watchdog }}
+
           GITHUB_SHA: ${{ github.sha }}
 
       - name: Upload images artifact
