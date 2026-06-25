@@ -111,7 +111,8 @@ def main():
     # WORKDIR = Path.home() / "repair-crm"
 
     subprocess.run(
-        ["docker", "compose", "up", "-d", f"{target_container}"],
+        # ["docker", "compose", "up", "-d", f"{target_container}"],
+        ["docker", "restart", target],
         cwd=WORKDIR,
         check=True,
     )
