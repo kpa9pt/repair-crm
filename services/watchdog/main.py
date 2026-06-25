@@ -17,7 +17,28 @@ def save_state(state):
         json.dump(state, f, indent=2)
 
 
+def container_running(container):
+    result = subprocess.run(
+        [
+            "docker",
+            "inspect",
+            "-f",
+            "{{.State.Running}}",
+            container,
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    return result.returncode == 0 and result.stdout.strip() == "true"
+
+
 def healthcheck(container, port, path):
+
+    if not container_running(container):
+        print(f"[WATCHDOG] {container} is not running")
+        return False
+
     cmd = [
         "docker",
         "exec",
@@ -29,13 +50,24 @@ def healthcheck(container, port, path):
             f"urllib.request.urlopen('http://localhost:{port}{path}', timeout=2)"
         ),
     ]
-    return subprocess.run(cmd).returncode == 0
+
+    return (
+        subprocess.run(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode
+        == 0
+    )
 
 
 def trigger_rollback(service):
     print(f"[WATCHDOG] rollback triggered for {service}")
 
-    subprocess.run(["python", "/scripts/rollback.py", service])
+    env = os.environ.copy()
+    env["ROLLBACK_SERVICE"] = service
+
+    subprocess.run(["python", "/scripts/rollback.py"], env=env)
 
 
 def check_service(service, cfg):
