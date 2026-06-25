@@ -62,6 +62,10 @@ jobs:
           scp state.json \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
 
+      - name: Backup original state
+        run: |
+          cp state.json state.backup.json
+
       - name: Download images artifact
         run: |
           gh run download ${{ github.event.workflow_run.id }} \
@@ -186,10 +190,24 @@ jobs:
           echo "ROLLBACK_DECISION=$ROLLBACK" >> $GITHUB_ENV
 
       - name: Unlock rollback
+        id: unlock
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "ROLLBACK_DECISION='${{ env.ROLLBACK_DECISION }}' python3 -" \
             < scripts/deploy/unlock_rollback.py
+
+      - name: Restore state backup
+        if: always() && steps.unlock.outcome != 'success'
+        run: |
+          scp state.backup.json \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
+
+      - name: Post Reload nginx
+        if: always() && steps.unlock.outcome != 'success'
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            docker exec nginx /scripts/reload.sh
+          "
 
       - name: Rollback engine
         env:
