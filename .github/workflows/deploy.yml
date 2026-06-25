@@ -125,49 +125,14 @@ jobs:
 
       - name: push to VDS
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOFSSH'
-          set -e
-          
-          echo "=== PUSH TO VDS START ==="
-          date
-          whoami
-          pwd
-
-          echo "=== BEFORE CD ==="
-          ls -la ~
-
-          mkdir -p ~/repair-crm
-          cd ~/repair-crm
-          
-          echo "=== AFTER CD ==="
-          pwd
-          ls -la
-          
-          echo "=== DOWNLOADING COMPOSE ==="
-          curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.yml -o docker-compose.yml
-          echo "=== COMPOSE DOWNLOADED ==="
-          ls -la docker-compose.yml
-          
-          echo '📝 Creating .env...'
-          cat > .env << ENVEOF
-          DATABASE_URL=${{ secrets.DATABASE_URL }}
-          ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
-          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }}
-          DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
-          ENVEOF
-          
-          echo "=== ENV DONE ==="
-
-          echo "=== STARTING DOCKER COMPOSE ==="
-          docker compose up -d
-
-          echo "=== COMPOSE EXIT CODE CHECK ==="
-          docker ps
-
-          echo "=== PUSH TO VDS END ==="
-          EOFSSH
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "DATABASE_URL='${{ secrets.DATABASE_URL }}' \
+             ADMIN_USERNAME='${{ secrets.ADMIN_USERNAME }}' \
+             ADMIN_PASSWORD='${{ secrets.ADMIN_PASSWORD }}' \
+             SECRET_KEY='${{ secrets.SECRET_KEY }}' \
+             TELEGRAM_TOKEN='${{ secrets.TELEGRAM_TOKEN }}' \
+             DOMAIN_NAME='${{ secrets.DOMAIN_NAME }}' \
+             bash -s" < scripts/deploy/push_to_vds.sh
 
       - name: Verify ACTIVE services
         run: |
