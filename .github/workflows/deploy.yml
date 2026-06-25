@@ -62,9 +62,10 @@ jobs:
           scp state.json \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
 
-      - name: Backup original state
+      - name: Backup original state (server)
         run: |
-          cp state.json state.backup.json
+          scp ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json \
+            state.backup.json
 
       - name: Download images artifact
         run: |
@@ -126,12 +127,26 @@ jobs:
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOFSSH'
           set -e
+          
+          echo "=== PUSH TO VDS START ==="
+          date
+          whoami
+          pwd
+
+          echo "=== BEFORE CD ==="
+          ls -la ~
 
           mkdir -p ~/repair-crm
           cd ~/repair-crm
-
+          
+          echo "=== AFTER CD ==="
+          pwd
+          ls -la
+          
+          echo "=== DOWNLOADING COMPOSE ==="
           curl -fsSL https://raw.githubusercontent.com/kpa9pt/repair-crm/main/docker-compose.yml -o docker-compose.yml
-         
+          echo "=== COMPOSE DOWNLOADED ==="
+          ls -la docker-compose.yml
           
           echo '📝 Creating .env...'
           cat > .env << ENVEOF
@@ -143,8 +158,15 @@ jobs:
           DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
           ENVEOF
           
-          echo '🚀 Starting services...'
+          echo "=== ENV DONE ==="
+
+          echo "=== STARTING DOCKER COMPOSE ==="
           docker compose up -d
+
+          echo "=== COMPOSE EXIT CODE CHECK ==="
+          docker ps
+
+          echo "=== PUSH TO VDS END ==="
           EOFSSH
 
       - name: Verify ACTIVE services
@@ -189,10 +211,6 @@ jobs:
           ROLLBACK=$(cat rollback_decision.json | base64 -w0)
           echo "ROLLBACK_DECISION=$ROLLBACK" >> $GITHUB_ENV
 
-      - name: Failing deploy
-        run: |
-          cat trash.json
-
       - name: Unlock rollback
         id: unlock
         run: |
@@ -203,8 +221,13 @@ jobs:
       - name: Restore state backup
         if: always() && steps.unlock.outcome != 'success'
         run: |
-          scp state.backup.json \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
+          if [ -s state.backup.json ]; then
+            echo "restoring backup state"
+            scp state.backup.json \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
+          else
+            echo "backup empty - skip restore"
+          fi
 
       - name: Post Reload nginx
         if: always() && steps.unlock.outcome != 'success'
