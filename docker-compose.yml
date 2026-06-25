@@ -84,30 +84,33 @@ services:
           memory: 64M
     restart: unless-stopped
 
-#  watchdog:
-#    build:
-#      context: ./services/watchdog
-#    container_name: watchdog
-#
-#    volumes:
-#      - ./state.json:/state/state.json:ro
-#      - ./watchdog.json:/state/watchdog.json
-#      - /var/run/docker.sock:/var/run/docker.sock
-#
-#    mem_limit: 64m
-#    cpus: "0.2"
-#
-#    healthcheck:
-#      test: [ "CMD", "python", "-c", "print('ok')" ]
-#      interval: 30s
-#      timeout: 3s
-#      retries: 3
-#
-#    depends_on:
-#      nginx:
-#        condition: service_healthy
-#
-#    restart: unless-stopped
+  watchdog:
+    build:
+      context: .
+      dockerfile: services/watchdog/Dockerfile
+    container_name: watchdog
+
+    volumes:
+      - ./state:/state:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    environment:
+      STATE_PATH: /state/state.json
+
+
+    mem_limit: 64m
+    cpus: "0.2"
+
+    healthcheck:
+      test: [ "CMD", "python", "-c", "print('ok')" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+    depends_on:
+      nginx:
+        condition: service_healthy
+    restart: unless-stopped
 
 
   gateway-blue:
