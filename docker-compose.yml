@@ -96,6 +96,7 @@ services:
 
     environment:
       STATE_PATH: /state/state.json
+      WORKDIR: /app
 
 
     mem_limit: 64m

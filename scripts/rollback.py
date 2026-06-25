@@ -12,6 +12,14 @@ STATE_FILE = Path(
         str(Path.home() / "repair-crm" / "state" / "state.json"),
     )
 )
+
+WORKDIR = Path(
+    os.getenv(
+        "WORKDIR",
+        str(Path.home() / "repair-crm"),
+    )
+)
+
 NGINX_CONTAINER = "nginx"
 
 service = os.getenv("ROLLBACK_SERVICE")
@@ -100,7 +108,7 @@ def main():
     print(f"🔄 rollback: {active} → {target}")
 
     # 1. start target
-    WORKDIR = Path.home() / "repair-crm"
+    # WORKDIR = Path.home() / "repair-crm"
 
     subprocess.run(
         ["docker", "compose", "up", "-d", f"{target_container}"],
