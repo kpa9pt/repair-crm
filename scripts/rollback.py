@@ -112,7 +112,7 @@ def main():
 
     subprocess.run(
         # ["docker", "compose", "up", "-d", f"{target_container}"],
-        ["docker", "restart", target],
+        ["docker", "restart", f"{target_container}"],
         cwd=WORKDIR,
         check=True,
     )
