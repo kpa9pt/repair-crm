@@ -2,7 +2,7 @@
 set -e
 
 STATE_FILE=/etc/nginx/state/state.json
-
+#dfff
 echo "[LOCAL] generating default state"
 
 cat > "$STATE_FILE" <<EOF
