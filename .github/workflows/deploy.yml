@@ -189,6 +189,10 @@ jobs:
           ROLLBACK=$(cat rollback_decision.json | base64 -w0)
           echo "ROLLBACK_DECISION=$ROLLBACK" >> $GITHUB_ENV
 
+      - name: Failing deploy
+        run: |
+          cat trash.json
+
       - name: Unlock rollback
         id: unlock
         run: |
