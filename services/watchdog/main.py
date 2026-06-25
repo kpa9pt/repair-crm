@@ -89,6 +89,7 @@ def main():
             # mark locked immediately
             state["services"][service]["rollback_locked"] = True
             rolled_back_this_cycle.add(service)
+            # jfklf
 
             save_state(state)
 
