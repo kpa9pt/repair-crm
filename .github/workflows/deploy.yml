@@ -245,27 +245,13 @@ jobs:
           python scripts/deploy/run_rollbacks.py
           
 
-      - name: Cleanup inactive container
+      - name: Cleanup inactive containers
+        if: always()
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          DEPLOY_PLAN: ${{ env.DEPLOY_PLAN }}
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            set -e
-
-            echo '=== READ ACTUAL STATE ==='
-            ACTIVE=\$(cat ~/repair-crm/state/state.json | jq -r '.services.gateway.active')
-
-            if [ \"\$ACTIVE\" = \"blue\" ]; then
-              INACTIVE=\"green\"
-            else
-              INACTIVE=\"blue\"
-            fi
-
-            echo \"Stopping inactive container: gateway-\$INACTIVE\"
-
-            docker stop gateway-\$INACTIVE || true
-          "
-
-      - name: Cleanup old images
-        run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
-            docker system prune -f
-          "
+          ssh $SERVER_USER@$SERVER_IP \
+            "DEPLOY_PLAN='$DEPLOY_PLAN' python3 -" \
+            < scripts/deploy/cleanup.py
