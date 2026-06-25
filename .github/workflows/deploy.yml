@@ -202,6 +202,13 @@ jobs:
           scp state.backup.json \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
 
+      - name: Post Reload nginx
+        if: always() && steps.unlock.outcome != 'success'
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            docker exec nginx /scripts/reload.sh
+          "
+
       - name: Rollback engine
         env:
           SERVER_USER: ${{ secrets.SERVER_USER }}
