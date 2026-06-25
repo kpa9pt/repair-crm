@@ -5,6 +5,7 @@ import subprocess
 
 
 STATE_PATH = os.getenv("STATE_PATH", "/state/state.json")
+WORKDIR = os.getenv("WORKDIR", "/app")
 
 
 def load_state():
@@ -67,6 +68,7 @@ def trigger_rollback(service):
     env = os.environ.copy()
     env["ROLLBACK_SERVICE"] = service
     env["STATE_PATH"] = STATE_PATH
+    env["WORKDIR"] = WORKDIR
 
     subprocess.run(["python", "/scripts/rollback.py"], env=env)
 
