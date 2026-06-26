@@ -1,32 +1,30 @@
 import sys
 from pathlib import Path
 import json
-import subprocess
+import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+# Сервисы, которые НЕ должны быть в state (инфраструктурные)
+IGNORE_SERVICES = ["postgres"]
 
-def get_compose_hash(service: str) -> str:
+
+def get_compose_hash(service: str, compose_data: dict) -> str:
     """Извлекает секцию сервиса из docker-compose.yml и вычисляет хеш"""
     print(f"🔍 Computing hash for {service}...", file=sys.stderr)
     try:
-        result = subprocess.run(
-            ["yq", "eval", f".services.{service}", "docker-compose.yml"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        section = result.stdout
-        if not section.strip():
+        section = compose_data.get("services", {}).get(service, {})
+        if not section:
             print(f"⚠️  Empty section for {service}", file=sys.stderr)
             return ""
-        hash_result = subprocess.run(
-            ["sha256sum"], input=section, capture_output=True, text=True, check=True
-        )
-        hash_val = hash_result.stdout.split()[0]
+        # Превращаем секцию в строку для хеширования
+        section_str = yaml.dump(section, default_flow_style=False, sort_keys=True)
+        import hashlib
+
+        hash_val = hashlib.sha256(section_str.encode()).hexdigest()
         print(f"   ✅ {service}: {hash_val[:8]}...", file=sys.stderr)
         return hash_val
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         print(f"❌ ERROR: Failed to compute hash for {service}: {e}", file=sys.stderr)
         return ""
 
@@ -34,30 +32,20 @@ def get_compose_hash(service: str) -> str:
 def main():
     print("📊 Computing compose hashes for ALL services...", file=sys.stderr)
 
-    # Получаем все секции из docker-compose.yml
-    # Через yq получаем список ключей .services
-    result = subprocess.run(
-        ["yq", "eval", ".services | keys", "docker-compose.yml"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    # Загружаем docker-compose.yml как Python dict
+    with open("docker-compose.yml") as f:
+        compose_data = yaml.safe_load(f)
 
-    # Парсим список сервисов из вывода yq
-    services = []
-    for line in result.stdout.strip().split("\n"):
-        line = line.strip()
-        if line and not line.startswith("---"):
-            # Убираем кавычки если есть
-            service = line.strip('"-')
-            if service:
-                services.append(service)
+    services = list(compose_data.get("services", {}).keys())
 
-    print(f"   Found services: {services}", file=sys.stderr)
+    # Фильтруем инфраструктурные сервисы
+    services = [s for s in services if s not in IGNORE_SERVICES]
+
+    print(f"   Found services (excluding postgres): {services}", file=sys.stderr)
 
     hashes = {}
     for service in services:
-        h = get_compose_hash(service)
+        h = get_compose_hash(service, compose_data)
         if h:
             hashes[service] = h
         else:
