@@ -85,11 +85,17 @@ def check_service(service, cfg):
 
     retries = 15
 
+    print(f"[WATCHDOG] Checking {container} (max retries: {retries})")
+
     for i in range(retries):
         if healthcheck(container, port, health):
+            print(f"[WATCHDOG] ✅ {container} is healthy")
             return True
+
+        print(f"[WATCHDOG] ⏳ {container} not ready yet, retry {i + 1}/{retries}...")
         time.sleep(2)
 
+    print(f"[WATCHDOG] ❌ {container} failed after {retries} attempts")
     return False
 
 
