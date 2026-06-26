@@ -33,13 +33,6 @@ jobs:
         with:
           files_from_source_file: patterns.txt
 
-      - name: DEBUG - Show patterns and changed files
-        run: |
-          echo "=== patterns.txt ==="
-          cat patterns.txt
-          echo "=== ALL_CHANGED_FILES ==="
-          echo "${{ steps.changed-files.outputs.all_changed_files }}"
-
       - name: Detect changed services
         id: services
         run: |
@@ -60,7 +53,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    if: fromJSON(needs.prepare.outputs.services) != '[]'
+    if: needs.prepare.outputs.services != '[]'  # ← ИСПРАВЛЕНО!
     strategy:
       matrix:
         service: ${{ fromJSON(needs.prepare.outputs.services) }}
