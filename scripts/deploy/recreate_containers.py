@@ -5,7 +5,7 @@ import subprocess
 
 
 def main():
-    plan_raw = os.environ.get("DEPLOY_PLAN", "[]")
+    plan_raw = os.environ.get("COMPOSE_PLAN", "[]")
     deploy_plan = json.loads(base64.b64decode(plan_raw).decode())
 
     if not deploy_plan:
