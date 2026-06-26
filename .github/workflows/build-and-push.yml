@@ -33,6 +33,13 @@ jobs:
         with:
           files_from_source_file: patterns.txt
 
+      - name: DEBUG - Show patterns and changed files
+        run: |
+          echo "=== patterns.txt ==="
+          cat patterns.txt
+          echo "=== ALL_CHANGED_FILES ==="
+          echo "${{ steps.changed-files.outputs.all_changed_files }}"
+
       - name: Detect changed services
         id: services
         run: |
