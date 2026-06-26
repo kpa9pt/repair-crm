@@ -1,16 +1,24 @@
+import sys
 import json
 import os
+from pathlib import Path
+from shared.service_registry import get_services
 
-SERVICES = ["gateway", "migrations", "nginx", "certbot", "watchdog"]
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 
 github_sha = os.environ.get("GITHUB_SHA", "")
+changed_services_json = os.environ.get("CHANGED_SERVICES", "[]")
+
+try:
+    changed_services = json.loads(changed_services_json)
+except json.JSONDecodeError:
+    changed_services = []
 
 manifest = {}
 
-for service in SERVICES:
-    changed = os.environ.get(f"CHANGED_{service.upper()}", "false")
-
-    if changed == "true":
+for service in get_services():
+    if service in changed_services:
         manifest[service] = github_sha
 
 print(json.dumps(manifest))

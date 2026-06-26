@@ -1,0 +1,1 @@
+{"services": {"gateway": {"blue": {"image": "test"}, "green": {"image": "test"}}, "nginx": {"image": "test"}}}
