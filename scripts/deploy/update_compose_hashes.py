@@ -14,10 +14,9 @@ def main():
 
     with open("state.json") as f:
         state = json.load(f)
-    print(
-        f"   State hashes: {len(state.get('services', {}))} services", file=sys.stderr
-    )
+    print(f"   State services: {len(state.get('services', {}))}", file=sys.stderr)
 
+    updated = 0
     for service, new_hash in current.items():
         if service in state.get("services", {}):
             old_hash = state["services"][service].get("compose_hash", "")
@@ -29,13 +28,19 @@ def main():
                     f"{new_hash[:8]}...",
                     file=sys.stderr,
                 )
+                updated += 1
         else:
-            print(f"⚠️  Service {service} not found in state", file=sys.stderr)
+            print(
+                f"⚠️  Service {service} not found in state, skipping",
+                file=sys.stderr,
+            )
 
     with open("state.json", "w") as f:
         json.dump(state, f, indent=2)
 
-    print("✅ Compose hashes updated in state.json", file=sys.stderr)
+    print(
+        f"✅ Compose hashes updated in state.json ({updated} changes)", file=sys.stderr
+    )
 
 
 if __name__ == "__main__":
