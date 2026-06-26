@@ -89,7 +89,7 @@ def check_service(service, cfg):
 
     for i in range(retries):
         if healthcheck(container, port, health):
-            print(f"[WATCHDOG] ✅ {container} is healthy")
+            print(f"[WATCHDOG] ✅ {container} is healthy", flush=True)
             return True
 
         print(
