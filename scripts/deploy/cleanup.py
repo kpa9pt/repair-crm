@@ -37,8 +37,9 @@ def main():
             print(f"stopping {container}")
             subprocess.run(["docker", "stop", container], check=False)
 
-    print("=== PRUNE ===")
-    subprocess.run(["docker", "system", "prune", "-f"], check=False)
+    # ✅ Удаляем только старые/неиспользуемые образы
+    print("=== PRUNE unused images (keep containers) ===")
+    subprocess.run(["docker", "image", "prune", "-a", "-f"], check=False)
 
     print("=== CLEANUP DONE ===")
 
