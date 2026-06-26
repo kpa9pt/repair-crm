@@ -53,6 +53,7 @@ jobs:
         if: steps.state.outputs.exists == 'false'
         env:
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          PYTHONPATH: .  # ← добавить
         run: |
           python scripts/deploy/bootstrap_state.py > state.json
 
