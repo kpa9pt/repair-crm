@@ -43,6 +43,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.tx
+
       - name: State for runner
         if: steps.state.outputs.exists == 'true'
         run: |
