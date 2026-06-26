@@ -81,6 +81,7 @@ for service in get_services():
             "port": cfg.get("port", 8000),
             "healthcheck": cfg.get("healthcheck", "/health"),
             "rollback_locked": False,
+            "compose_hash": "",  # ← добавить
             "blue": {"image": image},
             "green": {"image": image},
         }
@@ -89,6 +90,7 @@ for service in get_services():
             "strategy": "single",
             "image": image,
             "rollback_locked": False,
+            "compose_hash": "",  # ← добавить
         }
 
 print(json.dumps(state, indent=2))
