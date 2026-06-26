@@ -1,0 +1,34 @@
+# service-registry.yaml
+services:
+  gateway:
+    strategy: blue-green
+    port: 8000
+    healthcheck: /health
+    paths:
+      - 'services/gateway/**'
+      - 'shared/**'
+      - 'requirements.txt'
+
+  nginx:
+    strategy: single
+    paths:
+      - 'services/nginx/**'
+
+  certbot:
+    strategy: single
+    paths:
+      - 'services/certbot/**'
+
+  migrations:
+    strategy: single
+    paths:
+      - 'services/migrations/**'
+      - 'shared/**'
+      - 'alembic.ini'
+      - 'requirements.txt'
+
+  watchdog:
+    strategy: single
+    paths:
+      - 'services/watchdog/**'
+      - 'scripts/rollback.py'

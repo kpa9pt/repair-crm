@@ -1,19 +1,20 @@
+import sys
+from pathlib import Path
 import json
 import os
 import requests
-import sys
+from shared.service_registry import get_services, get_service_config, is_blue_green
+
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Добавляем корень проекта в PYTHONPATH
 
 OWNER = "kpa9pt"
 
-SERVICES = [
-    "gateway",
-    "nginx",
-    "certbot",
-    "migrations",
-    "watchdog",
-]
-
-TOKEN = os.environ["GHCR_READ_TOKEN"]
+TOKEN = os.environ.get("GHCR_READ_TOKEN")
+if not TOKEN:
+    print("ERROR: GHCR_READ_TOKEN not set", file=sys.stderr)
+    sys.exit(1)
 
 # 🔥 DEBUG 1: проверяем что токен вообще есть и не пустой
 print("TOKEN EXISTS:", bool(TOKEN), file=sys.stderr)
@@ -53,7 +54,6 @@ def latest_image(service: str) -> str:
     print("VERSIONS COUNT:", len(versions), file=sys.stderr)
 
     for version in versions:
-        # ❗ оставили как у тебя было (НЕ трогаем логику)
         tags = version["metadata"]["container"]["tags"]
 
         print("TAGS:", tags, file=sys.stderr)
@@ -67,33 +67,28 @@ def latest_image(service: str) -> str:
     raise RuntimeError(f"No sha tag found for {service}")
 
 
-state = {
-    "deploy_id": DEPLOY_ID,
-    "services": {
-        "gateway": {
+# Создаем state
+state = {"deploy_id": DEPLOY_ID, "services": {}}
+
+for service in get_services():
+    cfg = get_service_config(service)
+    image = latest_image(service)
+
+    if is_blue_green(service):
+        state["services"][service] = {
             "strategy": "blue-green",
             "active": "blue",
-            "port": 8000,
-            "healthcheck": "/health",
+            "port": cfg.get("port", 8000),
+            "healthcheck": cfg.get("healthcheck", "/health"),
+            "rollback_locked": False,
+            "blue": {"image": image},
+            "green": {"image": image},
+        }
+    else:
+        state["services"][service] = {
+            "strategy": "single",
+            "image": image,
             "rollback_locked": False,
         }
-    },
-}
-
-gateway_image = latest_image("gateway")
-
-state["services"]["gateway"]["blue"] = {"image": gateway_image}
-state["services"]["gateway"]["green"] = {"image": gateway_image}
-
-for service in [
-    "nginx",
-    "certbot",
-    "migrations",
-    "watchdog",
-]:
-    state["services"][service] = {
-        "strategy": "single",
-        "image": latest_image(service),
-    }
 
 print(json.dumps(state, indent=2))
