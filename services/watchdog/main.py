@@ -37,7 +37,7 @@ def container_running(container):
 def healthcheck(container, port, path):
 
     if not container_running(container):
-        print(f"[WATCHDOG] {container} is not running")
+        print(f"[WATCHDOG] {container} is not running", flush=True)
         return False
 
     cmd = [
@@ -63,7 +63,7 @@ def healthcheck(container, port, path):
 
 
 def trigger_rollback(service):
-    print(f"[WATCHDOG] rollback triggered for {service}")
+    print(f"[WATCHDOG] rollback triggered for {service}", flush=True)
 
     env = os.environ.copy()
     env["ROLLBACK_SERVICE"] = service
@@ -85,17 +85,20 @@ def check_service(service, cfg):
 
     retries = 15
 
-    print(f"[WATCHDOG] Checking {container} (max retries: {retries})")
+    print(f"[WATCHDOG] Checking {container} (max retries: {retries})", flush=True)
 
     for i in range(retries):
         if healthcheck(container, port, health):
             print(f"[WATCHDOG] ✅ {container} is healthy")
             return True
 
-        print(f"[WATCHDOG] ⏳ {container} not ready yet, retry {i + 1}/{retries}...")
+        print(
+            f"[WATCHDOG] ⏳ {container} not ready yet, retry {i + 1}/{retries}...",
+            flush=True,
+        )
         time.sleep(2)
 
-    print(f"[WATCHDOG] ❌ {container} failed after {retries} attempts")
+    print(f"[WATCHDOG] ❌ {container} failed after {retries} attempts", flush=True)
     return False
 
 
@@ -111,7 +114,7 @@ def main():
                 continue
 
             if cfg.get("rollback_locked", False):
-                print(f"[WATCHDOG] rollback locked → skip {service}")
+                print(f"[WATCHDOG] rollback locked → skip {service}", flush=True)
                 continue
 
             ok = check_service(service, cfg)
@@ -122,7 +125,7 @@ def main():
             if service in rolled_back_this_cycle:
                 continue
 
-            print(f"[WATCHDOG] service failed → {service}")
+            print(f"[WATCHDOG] service failed → {service}", flush=True)
 
             # rollback
             trigger_rollback(service)
