@@ -14,7 +14,8 @@ cat > "$STATE_FILE" <<EOF
       "active": "blue",
       "port": 8000,
       "healthcheck": "/health",
-      "rollback_locked": false
+      "rollback_locked": false,
+       "compose_hash": ""
     }
   }
 }

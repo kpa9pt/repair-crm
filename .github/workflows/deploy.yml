@@ -85,6 +85,23 @@ jobs:
           scp state.json \
               ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
 
+      - name: Compute compose hashes from docker-compose.yml
+        id: compose
+        run: |
+          python scripts/deploy/compute_compose_hashes.py > current_hashes.json
+
+      - name: Check which services have changed compose
+        id: changed-compose
+        run: |
+          python scripts/deploy/check_compose_hashes.py > compose_changed.json
+          CHANGED=$(cat compose_changed.json | jq -c .)
+          echo "services=$CHANGED" >> $GITHUB_OUTPUT
+
+      - name: Encode compose plan
+        run: |
+          PLAN=$(cat compose_changed.json | jq -c . | base64 -w0)
+          echo "COMPOSE_PLAN=$PLAN" >> $GITHUB_ENV
+
       - name: Check if deploy needed
         id: diff
         run: |
@@ -134,6 +151,13 @@ jobs:
              DOMAIN_NAME='${{ secrets.DOMAIN_NAME }}' \
              bash -s" < scripts/deploy/push_to_vds.sh
 
+      - name: Recreate containers with changed compose
+        if: steps.changed-compose.outputs.services != '[]'
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "COMPOSE_PLAN='${{ env.COMPOSE_PLAN }}' python3 -" \
+            < scripts/deploy/recreate_containers.py
+
       - name: Verify ACTIVE services
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
@@ -182,6 +206,11 @@ jobs:
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
             "ROLLBACK_DECISION='${{ env.ROLLBACK_DECISION }}' python3 -" \
             < scripts/deploy/unlock_rollback.py
+
+      - name: Update compose hashes in state
+        run: |
+          python scripts/deploy/update_compose_hashes.py
+          scp state.json ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
 
       - name: Restore state backup
         if: always() && steps.unlock.outcome != 'success'
