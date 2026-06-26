@@ -108,14 +108,42 @@ def main():
     print(f"🔄 rollback: {active} → {target}")
 
     # 1. start target
-    # WORKDIR = Path.home() / "repair-crm"
-
-    subprocess.run(
-        # ["docker", "compose", "up", "-d", f"{target_container}"],
-        ["docker", "restart", f"{target_container}"],
-        cwd=WORKDIR,
-        check=True,
+    # Проверяем, существует ли контейнер
+    result = subprocess.run(
+        ["docker", "inspect", target_container],
+        capture_output=True,
+        text=True,
     )
+
+    if result.returncode == 0:
+        # Контейнер существует → запускаем
+        print(f"📦 Starting existing container: {target_container}")
+        subprocess.run(
+            ["docker", "start", target_container],
+            cwd=WORKDIR,
+            check=True,
+        )
+    else:
+        # Контейнера нет → ничего не делаем, ждем что он появится
+        print(f"⏳ Container {target_container} does not exist yet, waiting...")
+        # Ждем 30 секунд, может деплой его создаст
+        time.sleep(30)
+        # И пробуем еще раз проверить существование
+        result = subprocess.run(
+            ["docker", "inspect", target_container],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            print(f"❌ Container {target_container} still does not exist")
+            print("❌ Rollback failed: cannot find container")
+            sys.exit(1)
+        else:
+            subprocess.run(
+                ["docker", "start", target_container],
+                cwd=WORKDIR,
+                check=True,
+            )
 
     # 2. healthcheck
     if not wait_health(
