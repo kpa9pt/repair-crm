@@ -95,6 +95,8 @@ jobs:
         id: compose
         run: |
           python scripts/deploy/compute_compose_hashes.py > current_hashes.json
+        env:
+          PYTHONPATH: .  # ← добавить
 
       - name: Check which services have changed compose
         id: changed-compose
@@ -102,6 +104,8 @@ jobs:
           python scripts/deploy/check_compose_hashes.py > compose_changed.json
           CHANGED=$(cat compose_changed.json | jq -c .)
           echo "services=$CHANGED" >> $GITHUB_OUTPUT
+        env:
+          PYTHONPATH: .  # ← добавить
 
       - name: Encode compose plan
         run: |
@@ -217,6 +221,8 @@ jobs:
         run: |
           python scripts/deploy/update_compose_hashes.py
           scp state.json ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json
+        env:
+          PYTHONPATH: .  # ← добавить
 
       - name: Restore state backup
         if: always() && steps.unlock.outcome != 'success'
