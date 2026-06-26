@@ -121,6 +121,8 @@ def main():
             # rollback
             trigger_rollback(service)
 
+            state = load_state()  # ← перечитываем
+
             # mark locked immediately
             state["services"][service]["rollback_locked"] = True
             rolled_back_this_cycle.add(service)
