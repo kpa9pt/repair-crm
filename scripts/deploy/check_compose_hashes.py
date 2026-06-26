@@ -27,7 +27,8 @@ def main():
         old_hash = state.get("services", {}).get(service, {}).get("compose_hash", "")
         if old_hash != new_hash:
             print(
-                f"   🔄 {service}: {old_hash[:8] if old_hash else 'empty'} → "
+                f"   🔄 {service}: "
+                f"{old_hash[:8] if old_hash else 'empty'} → "
                 f"{new_hash[:8]}...",
                 file=sys.stderr,
             )

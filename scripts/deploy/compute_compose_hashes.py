@@ -2,7 +2,6 @@ import sys
 from pathlib import Path
 import json
 import subprocess
-from shared.service_registry import get_services
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
@@ -33,9 +32,31 @@ def get_compose_hash(service: str) -> str:
 
 
 def main():
-    print("📊 Computing compose hashes...", file=sys.stderr)
+    print("📊 Computing compose hashes for ALL services...", file=sys.stderr)
+
+    # Получаем все секции из docker-compose.yml
+    # Через yq получаем список ключей .services
+    result = subprocess.run(
+        ["yq", "eval", ".services | keys", "docker-compose.yml"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    # Парсим список сервисов из вывода yq
+    services = []
+    for line in result.stdout.strip().split("\n"):
+        line = line.strip()
+        if line and not line.startswith("---"):
+            # Убираем кавычки если есть
+            service = line.strip('"-')
+            if service:
+                services.append(service)
+
+    print(f"   Found services: {services}", file=sys.stderr)
+
     hashes = {}
-    for service in get_services():
+    for service in services:
         h = get_compose_hash(service)
         if h:
             hashes[service] = h
