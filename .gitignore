@@ -10,3 +10,4 @@ __pycache__/
 state/
 # Local developer tools
 tools/
+local_roadmap.md

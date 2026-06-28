@@ -28,6 +28,9 @@ Repair CRM — backend-система для обработки заявок н�
 - Docker-окружение для разработки
 - CI/CD (GitHub Actions + GHCR)
 - Автоматический HTTPS (Let's Encrypt)
+- Zero-downtime Blue/Green деплой (state-driven)
+- Автоматический откат через Watchdog
+- Детект изменений по хешам compose-секций
 
 ---
 
@@ -146,27 +149,120 @@ make test
 - Build and Push to GHCR — сборка образа при пуше в main
 - Deploy to VDS — автоматический деплой на сервер
 
-Для работы CI/CD нужны секреты (смотри .github/workflows/deploy.yml).
-
+Для работы CI/CD нужны секреты (смотри [.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
 
 ---
 
 ## 🧭 Архитектура
 
+### Сервисы
+
+Проект состоит из следующих Docker-сервисов:
+
+| Сервис | Назначение |
+|--------|------------|
+| **Nginx** | Обратный прокси (порты 80/443), SSL-терминация, маршрутизация на активный gateway |
+| **Gateway (Blue/Green)** | Основное API (FastAPI). Два инстанса: `gateway-blue` и `gateway-green`. Активный определяется через `state.json` |
+| **PostgreSQL** | База данных |
+| **Migrations** | Отдельный сервис для наката Alembic-миграций перед запуском gateway |
+| **Certbot** | Автоматическое получение и обновление SSL-сертификатов Let's Encrypt |
+| **Watchdog** | Сервис мониторинга: проверяет здоровье активного gateway каждую минуту, при падении инициирует rollback на другой инстанс |
+
+### Схема взаимодействия
+
 ```text
-Nginx (порты 80/443) → Gateway (FastAPI) → PostgreSQL
-                ↓
-         Certbot (HTTPS)
+                            ┌─────────────────┐
+                            │    Certbot      │
+                            │(SSL-сертификаты)│
+                            └────────┬────────┘
+                                     ▼
+┌─────────────┐    ┌─────────────────────────────────────┐    ┌────────────┐
+│   Nginx     │───▶│      Gateway (Blue/Green)           │───▶│ PostgreSQL │
+│ (80/443)    │    │  ┌─────────────┐ ┌─────────────┐    │    │            │
+└─────────────┘    │  │ gateway-blue│ │gateway-green│    │    └────────────┘
+                   │  │  (active)   │ │  (standby)  │    │          ▲
+                   │  └─────────────┘ └─────────────┘    │          │
+                   └─────────────────────────────────────┘          │
+                                     ▲                              │
+                                     │                              │
+                            ┌────────┴────────┐            ┌────────┴────────┐
+                            │    Watchdog     │            │   Migrations    │
+                            │ (мониторинг)    │            │(накат миграций) │
+                            └─────────────────┘            └─────────────────┘
 ```
 
+### Миграции
+Перед запуском gateway выполняется сервис migrations, который накатывает Alembic-миграции. Gateway стартует только после успешного завершения миграций.
+
 ---
+
+## Blue/Green деплой
+
+Проект использует **zero-downtime Blue/Green деплой** с управлением состоянием через `state.json` и автоматическим откатом через `watchdog`.
+
+- **Blue** — текущий активный инстанс gateway
+- **Green** — новый инстанс, поднимаемый перед деплоем
+
+Процесс деплоя:
+1. Сборка нового образа с тегом `:git-sha`
+2. Обновление `state.json` (green получает новый образ)
+3. Запуск green контейнера
+4. Проверка здоровья green (healthcheck)
+5. Переключение Nginx на green
+6. Остановка blue (cleanup)
+
+### Watchdog (авто-откат)
+
+`watchdog` — сервис, который каждую минуту проверяет здоровье активного gateway. Если он упал — Watchdog инициирует rollback на другой инстанс.
+
+### Управление состоянием
+
+Все сервисы управляются через единый `state.json`:
+
+```json
+{
+  "deploy_id": "...",
+  "services": {
+    "gateway": {
+      "strategy": "blue-green",
+      "active": "blue",
+      "port": 8000,
+      "healthcheck": "/health",
+      "rollback_locked": false,
+      "compose_hash": "...",
+      "blue": {"image": "..."},
+      "green": {"image": "..."}
+    },
+    "nginx": {
+      "strategy": "single",
+      "image": "...",
+      "rollback_locked": false
+    }
+  }
+}
+```
+
+### Команды для ручного управления (на сервере)
+```bash
+# Проверить текущий активный контейнер
+cat ~/repair-crm/state/state.json | jq '.services.gateway.active'
+
+# Посмотреть состояние всех сервисов
+cat ~/repair-crm/state/state.json | jq '.services'
+
+# Перезагрузить Nginx (если upstream не обновился)
+docker exec nginx /scripts/reload.sh
+
+# Проверить, куда Nginx проксирует
+docker exec nginx cat /etc/nginx/upstreams/upstream.conf
+```
+
 
 ## 🎯 Дальнейшее развитие
 
 - [ ] **Модель "Техника"** — единицы техники с историей ремонтов
 - [ ] **Telegram бот** — уведомления о новых заявках
 - [ ] **React фронтенд** — полноценный интерфейс для менеджеров
-- [ ] **Blue/Green деплой** — zero-downtime обновления
 - [ ] **Мобильное приложение (iOS)** — для механиков в поле
 
 ---
