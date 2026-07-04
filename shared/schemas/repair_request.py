@@ -24,6 +24,9 @@ class RepairRequestBase(BaseModel):
     vehicle_name: str = Field(
         ..., description="Название техники", examples=["Квадроцикл-5"]
     )
+
+    equipment_id: Optional[int] = Field(None, description="ID техники из базы")
+
     client_name: Optional[str] = Field(
         None, description="Имя клиента", examples=["Топ Лес"]
     )
@@ -64,6 +67,7 @@ class RepairRequestUpdate(BaseModel):
     """
 
     vehicle_name: Optional[str] = Field(None, description="Название техники")
+    equipment_id: Optional[int] = Field(None, description="ID техники из базы")
     client_name: Optional[str] = Field(None, description="Имя клиента")
     phone: Optional[str] = Field(None, description="Телефон клиента")
     email: Optional[str] = Field(None, description="Email клиента")

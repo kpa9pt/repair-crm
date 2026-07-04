@@ -1,8 +1,20 @@
-from sqlalchemy import Column, String, Text, Boolean, DateTime, Numeric, Date
+from sqlalchemy import (
+    Column,
+    String,
+    Text,
+    Boolean,
+    DateTime,
+    Numeric,
+    Date,
+    Integer,
+    ForeignKey,
+)
+
 from sqlalchemy.sql import func
 from shared.models import Base
 from shared.enums import Urgency, RequestStatus
 from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.orm import relationship
 
 
 class RepairRequest(Base):
@@ -33,3 +45,7 @@ class RepairRequest(Base):
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+    equipment_id = Column(Integer, ForeignKey("equipment.id"), nullable=True)
+
+    equipment = relationship("Equipment", back_populates="repair_requests")

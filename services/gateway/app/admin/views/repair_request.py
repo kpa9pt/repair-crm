@@ -1,10 +1,12 @@
 from decimal import Decimal
 from zoneinfo import ZoneInfo
-
 from sqladmin import ModelView
 
 from shared.models import RepairRequest
 from shared.enums import Urgency, RequestStatus
+
+# Удали импорт IntegerField, если он не нужен
+# from wtforms import IntegerField
 
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 
@@ -22,6 +24,7 @@ class RepairRequestAdmin(ModelView, model=RepairRequest):
     column_list = [
         RepairRequest.id,
         RepairRequest.vehicle_name,
+        RepairRequest.equipment_id,
         RepairRequest.status,
         RepairRequest.urgency,
         RepairRequest.is_operational,
@@ -32,6 +35,7 @@ class RepairRequestAdmin(ModelView, model=RepairRequest):
 
     column_labels = {
         RepairRequest.vehicle_name: "Техника",
+        RepairRequest.equipment_id: "Техника (из БД)",
         RepairRequest.client_name: "Клиент",
         RepairRequest.status: "Статус заявки",
         RepairRequest.urgency: "Срочность",
@@ -45,7 +49,7 @@ class RepairRequestAdmin(ModelView, model=RepairRequest):
         RepairRequest.urgency,
     ]
 
-    column_filters = []
+    column_filters = []  # пока пусто
 
     column_default_sort = [(RepairRequest.created_at, True)]
 
@@ -53,34 +57,38 @@ class RepairRequestAdmin(ModelView, model=RepairRequest):
         "vehicle_name",
         "client_name",
         "description",
+        "equipment.name",
     ]
 
     can_export = True
     can_view_details = True
 
     # --------------------
-    # ФОРМА
+    # ФОРМА (ОСНОВНОЙ ФИКС)
     # --------------------
     form_columns = [
-        # === ОСНОВНОЕ ===
         "vehicle_name",
+        "equipment",  # <- Теперь поле точно появится
         "description",
         "is_operational",
-        # === УПРАВЛЕНИЕ ===
         "urgency",
         "status",
         "deadline",
-        # === ФИНАНСЫ ===
         "parts_cost",
         "client_payment",
-        # === КЛИЕНТ ===
         "client_name",
         "phone",
         "email",
     ]
 
+    # 👇 Выпадающий список с поиском (дополнительно)
+
+    # Удали form_overrides, если он был
+    # form_overrides = {...}
+
     form_args = {
         "vehicle_name": {"label": "Техника"},
+        "equipment_id": {"label": "Выбрать технику из базы"},
         "client_name": {"label": "Клиент", "default": "Топ Лес"},
         "phone": {"label": "Телефон"},
         "email": {"label": "Email"},
@@ -92,16 +100,6 @@ class RepairRequestAdmin(ModelView, model=RepairRequest):
         "client_payment": {"label": "Оплата клиента", "default": Decimal("0.00")},
         "is_operational": {"label": "Техника на ходу?", "default": False},
     }
-
-    # # ДЕФОЛТЫ (SQLAdmin правильный способ)
-    # form_args = {
-    #     "client_name": {"default": "Топ Лес"},
-    #     "urgency": {"default": Urgency.NORMAL.value},
-    #     "status": {"default": RequestStatus.NEW.value},
-    #     "is_operational": {"default": False},
-    #     "parts_cost": {"default": Decimal("0.00")},
-    #     "client_payment": {"default": Decimal("0.00")},
-    # }
 
     # --------------------
     # ВЫПАДАЮЩИЕ СПИСКИ

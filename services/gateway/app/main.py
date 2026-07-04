@@ -1,12 +1,11 @@
 from fastapi import FastAPI
 from shared import get_settings
-from .routers import repair_requests_router
-from .admin import AdminAuth, RepairRequestAdmin
+from .routers import repair_requests_router, equipment_router
+from .admin import AdminAuth, RepairRequestAdmin, EquipmentAdmin
 from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
 from shared.db import get_engine  # ← импортируем новую функцию
 from fastapi.responses import RedirectResponse
-
 
 settings = get_settings()
 
@@ -36,9 +35,12 @@ admin = Admin(
 
 # Регистрируем модели
 admin.add_view(RepairRequestAdmin)
+admin.add_view(EquipmentAdmin)  # ← добавить
 
 # Подключаем роутеры
 app.include_router(repair_requests_router)
+
+app.include_router(equipment_router)
 
 
 @app.get("/")
