@@ -5,7 +5,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: repair_crm
-      POSTGRES_HOST_AUTH_METHOD: trust  # <- КЛЮЧЕВАЯ СТРОКgi
+      POSTGRES_HOST_AUTH_METHOD: trust  # <- КЛЮЧЕВАЯ СТРОКА
     expose:
       - "5432"
     volumes:

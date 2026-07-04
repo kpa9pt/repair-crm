@@ -51,6 +51,17 @@ generate-migrations: check-env
 		@echo "✅ Migration created in shared/db/migrations/versions/"
 		@echo "⚠️  Don't forget to commit this file!"
 
+COMPOSE_FILES = -f docker-compose.yml -f docker-compose.test.yml
+
+generate-migrations-docker: check-env
+		@echo "📝 Generating migrations..."
+		@docker-compose $(COMPOSE_FILES) up -d postgres
+		@sleep 2
+		@alembic revision --autogenerate -m "$(message)"
+		@echo "✅ Migration created in shared/db/migrations/versions/"
+		@echo "⚠️  Don't forget to commit this file!"
+
+
 # Помощь
 help:
 	@echo "Available commands:"

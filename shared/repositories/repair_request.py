@@ -1,3 +1,4 @@
+# shared/repositories/repair_request.py
 """
 Репозиторий — это слой абстракции между бизнес-логикой и базой данных.
 Он скрывает детали SQLAlchemy и позволяет легко подменить БД в тестах.
@@ -19,9 +20,7 @@ class RepairRequestRepository:
         """Создать новую заявку на ремонт."""
         request = RepairRequest(**kwargs)
         self.session.add(request)
-        # НЕТ commit! Только flush для получения ID
         await self.session.flush()
-        # await self.session.refresh(request)
         return request
 
     async def get_by_id(self, request_id: int) -> RepairRequest | None:
@@ -48,3 +47,33 @@ class RepairRequestRepository:
             .limit(limit)
         )
         return result.scalars().all()
+
+    async def update(self, request_id: int, **kwargs) -> RepairRequest | None:
+        """
+        Обновить заявку по ID.
+        Принимает только переданные поля (partial update).
+        """
+        request = await self.get_by_id(request_id)
+        if not request:
+            return None
+
+        # Обновляем только переданные поля
+        for key, value in kwargs.items():
+            if hasattr(request, key) and value is not None:
+                setattr(request, key, value)
+
+        await self.session.flush()
+        return request
+
+    async def delete(self, request_id: int) -> bool:
+        """
+        Удалить заявку по ID.
+        Возвращает True, если удаление прошло успешно, иначе False.
+        """
+        request = await self.get_by_id(request_id)
+        if not request:
+            return False
+
+        await self.session.delete(request)
+        await self.session.flush()
+        return True

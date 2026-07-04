@@ -10,10 +10,23 @@ from .repair_request import (
     RepairRequestListResponse,
 )
 
+from .equipment import (  # ← добавить
+    EquipmentBase,
+    EquipmentCreate,
+    EquipmentUpdate,
+    EquipmentResponse,
+    EquipmentListResponse,
+)
+
 __all__ = [
     "RepairRequestBase",
     "RepairRequestCreate",
     "RepairRequestUpdate",
     "RepairRequestResponse",
     "RepairRequestListResponse",
+    "EquipmentBase",
+    "EquipmentCreate",
+    "EquipmentUpdate",
+    "EquipmentResponse",
+    "EquipmentListResponse",
 ]

@@ -3,7 +3,7 @@
 """
 
 import pytest
-from shared.repository import RepairRequestRepository
+from shared.repositories.repair_request import RepairRequestRepository
 
 
 @pytest.mark.asyncio
@@ -11,6 +11,9 @@ async def test_repository_create(test_session):
     """Тест создания заявки через репозиторий"""
     repo = RepairRequestRepository(test_session)
     request = await repo.create(vehicle_name="Квадроцикл-5", description="Не заводится")
+    await test_session.commit()
+    await test_session.refresh(request)
+
     assert request.id is not None
     assert request.vehicle_name == "Квадроцикл-5"
     assert request.description == "Не заводится"

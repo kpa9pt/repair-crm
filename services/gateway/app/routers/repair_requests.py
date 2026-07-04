@@ -6,8 +6,8 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from shared import get_session_maker
-from shared.repository import RepairRequestRepository
+from shared import get_session_maker, RepairRequestRepository, EquipmentRepository
+
 from shared.schemas import (
     RepairRequestCreate,
     RepairRequestUpdate,
@@ -40,8 +40,23 @@ async def create_repair_request(
     - **status**: статус (new/in_progress/waiting_parts/
         diagnostics/waiting_approval/done)
     """
+
+    data = request_data.model_dump()
+
+    # Если equipment_id не передан, но есть vehicle_name — ищем в БД
+    if data.get("equipment_id") is None and data.get("vehicle_name"):
+        # Ищем технику по имени
+        session_maker = get_session_maker()
+        async with session_maker() as session:
+            equipment_repo = EquipmentRepository(session)
+            equipment = await equipment_repo.get_by_name_ignore_case(
+                data["vehicle_name"]
+            )
+            if equipment:
+                data["equipment_id"] = equipment.id
+
     # Конвертируем Pydantic модель в словарь
-    new_request = await repo.create(**request_data.model_dump())
+    new_request = await repo.create(**data)
     await repo.session.commit()
     return RepairRequestResponse.model_validate(new_request)
 
@@ -121,26 +136,29 @@ async def update_repair_request(
 ):
     """
     Обновить заявку (частичное обновление).
-
     Можно обновить любое поле или несколько полей сразу.
     """
-    existing = await repo.get_by_id(request_id)
-    if not existing:
+    update_dict = update_data.model_dump(exclude_unset=True)
+
+    if not update_dict:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No fields to update",
+        )
+
+    # 👇 Используем метод репозитория
+    request = await repo.update(request_id, **update_dict)
+    if not request:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Repair request with id {request_id} not found",
         )
 
-    # Обновляем только переданные поля
-    update_dict = update_data.model_dump(exclude_unset=True)
-    for key, value in update_dict.items():
-        setattr(existing, key, value)
-
-    # await repo.session.commit()
+    # 👇 Роутер управляет транзакцией
     await repo.session.commit()
-    await repo.session.refresh(existing)
+    await repo.session.refresh(request)  # ← ВАЖНО!
 
-    return RepairRequestResponse.model_validate(existing)
+    return RepairRequestResponse.model_validate(request)
 
 
 @router.delete("/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
