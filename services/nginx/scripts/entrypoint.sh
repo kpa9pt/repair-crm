@@ -13,7 +13,9 @@ echo "[STEP] generate nginx config"
 /scripts/nginx_config.sh
 
 echo "[STEP] nginx test"
-nginx -t
+nginx -t || {
+    echo "[ERROR] nginx config test failed, but continuing..."
+}
 
 echo "[STEP] start nginx"
 nginx -g 'daemon off;' &

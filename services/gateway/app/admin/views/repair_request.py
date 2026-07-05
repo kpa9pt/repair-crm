@@ -25,6 +25,7 @@ class RepairRequestAdmin(ModelView, model=RepairRequest):
         RepairRequest.id,
         RepairRequest.vehicle_name,
         RepairRequest.equipment_id,
+        RepairRequest.created_by_username,  # ← добавить
         RepairRequest.status,
         RepairRequest.urgency,
         RepairRequest.is_operational,
@@ -36,6 +37,7 @@ class RepairRequestAdmin(ModelView, model=RepairRequest):
     column_labels = {
         RepairRequest.vehicle_name: "Техника",
         RepairRequest.equipment_id: "Техника (из БД)",
+        RepairRequest.created_by_username: "Создатель",  # ← добавить
         RepairRequest.client_name: "Клиент",
         RepairRequest.status: "Статус заявки",
         RepairRequest.urgency: "Срочность",

@@ -5,6 +5,12 @@ services:
   gateway-green:
     image: ${GATEWAY_GREEN_IMAGE}
 
+  auth-blue:
+    image: ${AUTH_BLUE_IMAGE}
+
+  auth-green:
+    image: ${AUTH_GREEN_IMAGE}
+
   nginx:
     image: ${NGINX_IMAGE}
 

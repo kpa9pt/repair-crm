@@ -15,6 +15,8 @@ from shared.schemas import (
     EquipmentListResponse,
 )
 
+from shared.auth import get_current_user, require_role, User
+
 router = APIRouter(prefix="/api/v1/equipment", tags=["Equipment"])
 
 
@@ -34,6 +36,7 @@ async def get_repo():
 async def create_equipment(
     data: EquipmentCreate,
     repo: EquipmentRepository = Depends(get_repo),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Создать новую единицу техники.
@@ -62,6 +65,7 @@ async def get_all_equipment(
         description="Поиск по name, serial_number, owner_name",
     ),
     repo: EquipmentRepository = Depends(get_repo),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Получить список техники с пагинацией и поиском.
@@ -89,6 +93,7 @@ async def get_all_equipment(
 async def get_equipment_by_id(
     equipment_id: int,
     repo: EquipmentRepository = Depends(get_repo),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Получить технику по ID.
@@ -111,6 +116,7 @@ async def update_equipment(
     equipment_id: int,
     data: EquipmentUpdate,
     repo: EquipmentRepository = Depends(get_repo),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Обновить технику (частичное обновление).
@@ -145,6 +151,7 @@ async def update_equipment(
 async def delete_equipment(
     equipment_id: int,
     repo: EquipmentRepository = Depends(get_repo),
+    current_user: User = Depends(require_role(["admin"])),
 ):
     """
     Удалить технику по ID.

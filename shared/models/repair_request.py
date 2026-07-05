@@ -46,6 +46,10 @@ class RepairRequest(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
+    created_by_id = Column(Integer, nullable=True)
+
+    created_by_username = Column(String(100), nullable=True)  # ← ДОБАВИТЬ
+
     equipment_id = Column(Integer, ForeignKey("equipment.id"), nullable=True)
 
     equipment = relationship("Equipment", back_populates="repair_requests")

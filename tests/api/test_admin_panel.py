@@ -10,13 +10,13 @@ pytest = pytest.mark.asyncio
 
 async def test_admin_login_page_accessible(client):
     """Страница логина доступна"""
-    response = await client.get("/admin/login")
+    response = await client.get("/gateway/admin/login")
     assert response.status_code == 200
 
 
 async def test_admin_panel_redirects_to_login(client):
     """Без логина админка редиректит на логин"""
-    response = await client.get("/admin", follow_redirects=False)
+    response = await client.get("/gateway/admin", follow_redirects=False)
     assert response.status_code == 307 or response.status_code == 302
 
 
@@ -28,7 +28,9 @@ async def test_admin_login_with_correct_credentials(client):
         "username": settings.admin_username,
         "password": settings.admin_password,
     }
-    response = await client.post("/admin/login", data=login_data, follow_redirects=True)
+    response = await client.post(
+        "/gateway/admin/login", data=login_data, follow_redirects=True
+    )
     assert response.status_code == 200
 
 
@@ -38,9 +40,9 @@ async def test_repair_request_list_accessible_after_login(client):
     settings = get_settings()
 
     await client.post(
-        "/admin/login",
+        "/gateway/admin/login",
         data={"username": settings.admin_username, "password": settings.admin_password},
     )
     # Проверяем список
-    response = await client.get("/admin/repair-request/list")
+    response = await client.get("/gateway/admin/repair-request/list")
     assert response.status_code == 200

@@ -48,6 +48,10 @@ class RepairRequestBase(BaseModel):
     )
     deadline: Optional[date] = Field(None, description="Дедлайн (дата без времени)")
 
+    created_by_id: Optional[int] = Field(
+        None, description="ID пользователя, создавшего заявку"
+    )
+
 
 class RepairRequestCreate(RepairRequestBase):
     """
@@ -90,6 +94,7 @@ class RepairRequestResponse(RepairRequestBase):
 
     id: int = Field(..., description="ID заявки")
     created_at: datetime = Field(..., description="Дата создания")
+    created_by_username: Optional[str] = Field(None, description="Имя создателя")
 
     # Настройка для работы с SQLAlchemy моделями
     model_config = ConfigDict(from_attributes=True)

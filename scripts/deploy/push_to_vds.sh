@@ -21,6 +21,10 @@ TELEGRAM_TOKEN=$TELEGRAM_TOKEN
 DOMAIN_NAME=$DOMAIN_NAME
 EOF
 
+# ✅ ДОБАВЛЯЕМ: создаем volume если его нет
+echo "=== CREATE VOLUME ==="
+docker volume create repair_crm_postgres_data || true
+
 echo "=== DOCKER COMPOSE UP ==="
 docker compose up -d
 
