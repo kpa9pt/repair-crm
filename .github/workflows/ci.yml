@@ -21,5 +21,8 @@ jobs:
       - name: Setup env for tests
         run: cp .env.example .env
 
+      - name: Create external volume for tests
+        run: docker volume create repair_crm_postgres_data || true
+
       - name: Run tests
         run: make test
