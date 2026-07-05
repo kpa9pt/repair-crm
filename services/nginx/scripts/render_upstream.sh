@@ -18,7 +18,7 @@ jq -r '
 while read SERVICE ACTIVE PORT
 do
 
-cat > "/etc/nginx/upstreams/upstream.conf" <<EOF
+cat >> "/etc/nginx/upstreams/upstream.conf" <<EOF
 upstream ${SERVICE}_backend {
   server ${SERVICE}-${ACTIVE}:${PORT} max_fails=3 fail_timeout=10s;
 }

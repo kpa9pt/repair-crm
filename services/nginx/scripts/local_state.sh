@@ -16,6 +16,14 @@ cat > "$STATE_FILE" <<EOF
       "healthcheck": "/health",
       "rollback_locked": false,
        "compose_hash": ""
+    },
+    "auth": {
+      "strategy": "blue-green",
+      "active": "blue",
+      "port": 8001,
+      "healthcheck": "/health",
+      "rollback_locked": false,
+       "compose_hash": ""
     }
   }
 }

@@ -6,6 +6,7 @@ from sqladmin import Admin
 from starlette.middleware.sessions import SessionMiddleware
 from shared.db import get_engine  # ← импортируем новую функцию
 from fastapi.responses import RedirectResponse
+from fastapi import Request
 
 settings = get_settings()
 
@@ -13,6 +14,7 @@ app = FastAPI(
     title="Gateway API",
     version="0.1.0",
     description="API Gateway для CRM ремонтной мастерской",
+    root_path="/gateway",  # ← ДОБАВИТЬ
 )
 
 # Добавляем middleware для сессий (нужен для аутентификации админки)
@@ -44,8 +46,10 @@ app.include_router(equipment_router)
 
 
 @app.get("/")
-async def root():
-    return RedirectResponse("/admin/")
+async def root(request: Request):
+    # base_url включает root_path
+    admin_url = str(request.base_url) + "admin/"
+    return RedirectResponse(url=admin_url)
 
 
 @app.get("/health")

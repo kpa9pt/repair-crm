@@ -205,6 +205,88 @@ services:
         reservations:
           memory: 128M
 
+  auth-blue:
+    container_name: auth-blue
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    expose:
+      - "8001"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@postgres:5432/repair_crm}
+      SECRET_KEY: ${SECRET_KEY:-my-super-secret-key-for-jwt-change-me-in-production}
+    command:
+      [
+        "uvicorn",
+        "services.auth.app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8001"
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    restart: unless-stopped
+
+  auth-green:
+    container_name: auth-green
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    expose:
+      - "8001"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@postgres:5432/repair_crm}
+      SECRET_KEY: ${SECRET_KEY:-my-super-secret-key-for-jwt-change-me-in-production}
+    command:
+      [
+        "uvicorn",
+        "services.auth.app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8001"
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    restart: unless-stopped
+
   migrations:
     build:
       context: .
@@ -219,5 +301,8 @@ services:
 
 volumes:
   postgres_data:
+    # ✅ Защищаем volume от случайного удаления
+    name: repair_crm_postgres_data
+    external: true   # ← ДОБАВИТЬ
   certbot_conf:
   certbot_web:

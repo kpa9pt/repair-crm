@@ -14,6 +14,8 @@ from shared.schemas import (
     RepairRequestResponse,
     RepairRequestListResponse,
 )
+from shared.auth import get_current_user, require_role, User
+
 
 router = APIRouter(prefix="/api/v1/repair-requests", tags=["Repair Requests"])
 
@@ -29,7 +31,9 @@ async def get_repo():
     "/", response_model=RepairRequestResponse, status_code=status.HTTP_201_CREATED
 )
 async def create_repair_request(
-    request_data: RepairRequestCreate, repo: RepairRequestRepository = Depends(get_repo)
+    request_data: RepairRequestCreate,
+    repo: RepairRequestRepository = Depends(get_repo),
+    current_user: User = Depends(require_role(["instructor", "mechanic", "admin"])),
 ):
     """
     Создать новую заявку на ремонт.
@@ -55,6 +59,10 @@ async def create_repair_request(
             if equipment:
                 data["equipment_id"] = equipment.id
 
+    # Добавляем создателя заявки
+    data["created_by_id"] = current_user.id
+    data["created_by_username"] = current_user.username  # ← ДОБАВИТЬ
+
     # Конвертируем Pydantic модель в словарь
     new_request = await repo.create(**data)
     await repo.session.commit()
@@ -63,7 +71,10 @@ async def create_repair_request(
 
 @router.get("/", response_model=RepairRequestListResponse)
 async def get_all_repair_requests(
-    skip: int = 0, limit: int = 100, repo: RepairRequestRepository = Depends(get_repo)
+    skip: int = 0,
+    limit: int = 100,
+    repo: RepairRequestRepository = Depends(get_repo),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Получить список всех заявок с пагинацией.
@@ -89,6 +100,7 @@ async def get_repair_requests_by_vehicle(
     skip: int = 0,
     limit: int = 100,
     repo: RepairRequestRepository = Depends(get_repo),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Получить все заявки для конкретной техники.
@@ -114,7 +126,9 @@ async def get_repair_requests_by_vehicle(
 
 @router.get("/{request_id}", response_model=RepairRequestResponse)
 async def get_repair_request(
-    request_id: int, repo: RepairRequestRepository = Depends(get_repo)
+    request_id: int,
+    repo: RepairRequestRepository = Depends(get_repo),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Получить конкретную заявку по ID.
@@ -133,6 +147,7 @@ async def update_repair_request(
     request_id: int,
     update_data: RepairRequestUpdate,
     repo: RepairRequestRepository = Depends(get_repo),
+    current_user: User = Depends(require_role(["mechanic", "admin"])),
 ):
     """
     Обновить заявку (частичное обновление).
@@ -163,7 +178,9 @@ async def update_repair_request(
 
 @router.delete("/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_repair_request(
-    request_id: int, repo: RepairRequestRepository = Depends(get_repo)
+    request_id: int,
+    repo: RepairRequestRepository = Depends(get_repo),
+    current_user: User = Depends(require_role(["admin"])),
 ):
     """
     Удалить заявку по ID.
