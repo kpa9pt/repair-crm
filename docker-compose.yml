@@ -39,8 +39,7 @@ services:
       - certbot_conf:/etc/letsencrypt
       - certbot_web:/var/www/certbot
       - ./state:/etc/nginx/state
-      - ./services/nginx/favicon.ico:/usr/share/nginx/html/favicon.ico
-      - ./services/nginx/logo.png:/usr/share/nginx/html/static/logo.png
+
     healthcheck:
 #      test: [ "CMD", "curl", "-f", "http://localhost/.well-known/acme-challenge/healthcheck" ]
       test: [ "CMD", "nginx", "-t" ]  # проверяет только конфиг
