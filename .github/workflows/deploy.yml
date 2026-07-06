@@ -180,6 +180,12 @@ jobs:
       - name: Write .env from secret
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
+      # Вставить в deploy.yml после создания .env
+      - name: Override DOMAIN_NAME from secret
+        run: |
+          echo "DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}" >> .env
+          echo "✅ DOMAIN_NAME set to ${{ secrets.DOMAIN_NAME }}"
+
       - name: Copy .env to server
         run: |
           scp .env ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/.env

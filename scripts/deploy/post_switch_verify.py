@@ -53,6 +53,8 @@ async def check_service(service: str, state: dict) -> dict:
     # Phase 2: Soak sleep (для всех сервисов одновременно!)
     print(f"phase 2 soak sleep: {service} (60s)", file=sys.stderr)
     # Ждем 60 секунд, но это ожидание будет параллельным для всех сервисов
+    # ⚠️ ДОБАВИТЬ ЭТУ СТРОКУ!
+    await asyncio.sleep(60)  # ← ВОТ ОНА
 
     # Phase 3: Soak verify
     print(f"phase 3 soak verify: {service}", file=sys.stderr)
