@@ -41,10 +41,16 @@ test-integration: check-env
 test-e2e: check-env
 		./scripts/test.sh tests/e2e
 
+# Флаг для полного теста
+FULL_TEST ?= false
+
 test:
-	make test-unit
-	make test-api
-	make test-integration
+	@echo "🚀 Running full test suite..."
+	@$(MAKE) down-v  # ← правильно
+	@$(MAKE) test-unit FULL_TEST=true
+	@$(MAKE) test-api FULL_TEST=true
+	@$(MAKE) test-integration FULL_TEST=true
+	@$(MAKE) down-v  # ← правильно
 
 generate-migrations: check-env
 		@echo "📝 Generating migrations..."
