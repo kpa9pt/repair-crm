@@ -62,6 +62,8 @@ class RepairRequestAdmin(ModelView, model=RepairRequest):
 
     can_export = True
     can_view_details = True
+    can_delete = True  # ← ДОБАВИТЬ ЭТУ СТРОКУ
+    can_edit = True  # ← если нужно редактирование
 
     # --------------------
     # ФОРМА (ОСНОВНОЙ ФИКС)
