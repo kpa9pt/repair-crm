@@ -71,6 +71,5 @@ def get_service_containers(service: str) -> List[str]:
     return [service]
 
 
-# тест
 # Для обратной совместимости с существующими скриптами
 SERVICES = get_services()
