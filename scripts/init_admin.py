@@ -1,14 +1,8 @@
 import asyncio
-import sys
-from pathlib import Path
-
-
 from shared import get_session_maker
 from shared.auth import get_password_hash
 from shared.models import User
 from sqlalchemy import select
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 async def create_admin():

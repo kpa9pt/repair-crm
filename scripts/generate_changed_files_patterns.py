@@ -1,8 +1,4 @@
-import sys
-from pathlib import Path
 from shared.service_registry import get_services, get_service_config
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 patterns = set()
 

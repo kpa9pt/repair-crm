@@ -1,19 +1,23 @@
 import sys
-from pathlib import Path
 import json
 import yaml
 import hashlib
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from shared.service_registry import get_blue_green_services, get_service_containers
 
 # Сервисы, которые НЕ должны быть в state (инфраструктурные)
 IGNORE_SERVICES = ["postgres"]
 
-# Blue-green сервисы: какие compose-сервисы объединять в один state-сервис
-BLUE_GREEN_MAP = {
-    "gateway": ["gateway-blue", "gateway-green"],
-    "auth": ["auth-blue", "auth-green"],
-}
+
+# ✅ Генерируем BLUE_GREEN_MAP из service-registry.yml
+def build_blue_green_map() -> dict:
+    """Генерирует словарь {service: [containers]} для blue-green сервисов"""
+    blue_green_map = {}
+    for service in get_blue_green_services():
+        blue_green_map[service] = get_service_containers(service)
+    return blue_green_map
+
+
+BLUE_GREEN_MAP = build_blue_green_map()
 
 
 def get_service_hash(service_name: str, compose_data: dict) -> str:

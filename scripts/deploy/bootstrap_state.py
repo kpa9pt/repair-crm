@@ -1,13 +1,8 @@
 import sys
-from pathlib import Path
 import json
 import os
 import requests
 from shared.service_registry import get_services, get_service_config, is_blue_green
-
-
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-# Добавляем корень проекта в PYTHONPATH
 
 OWNER = "kpa9pt"
 

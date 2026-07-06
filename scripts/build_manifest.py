@@ -1,11 +1,6 @@
-import sys
 import json
 import os
-from pathlib import Path
 from shared.service_registry import get_services
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 
 github_sha = os.environ.get("GITHUB_SHA", "")
 changed_services_json = os.environ.get("CHANGED_SERVICES", "[]")
