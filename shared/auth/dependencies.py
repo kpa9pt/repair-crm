@@ -4,12 +4,15 @@ from jose import JWTError
 from .schemas import User
 from .utils import decode_token
 
-security = HTTPBearer()  # ← вместо OAuth2PasswordBearer
+security = HTTPBearer()
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> User:
+    """
+    Получить текущего пользователя из JWT токена.
+    """
     token = credentials.credentials
     try:
         token_data = decode_token(token)
@@ -30,7 +33,6 @@ async def get_current_active_user(
     """
     Проверяет, что пользователь активен (заглушка для будущего).
     """
-    # В будущем можно добавить проверку is_active
     return current_user
 
 

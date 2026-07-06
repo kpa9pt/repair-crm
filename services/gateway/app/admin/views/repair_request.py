@@ -5,8 +5,6 @@ from sqladmin import ModelView
 from shared.models import RepairRequest
 from shared.enums import Urgency, RequestStatus
 
-# Удали импорт IntegerField, если он не нужен
-# from wtforms import IntegerField
 
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 
@@ -51,7 +49,7 @@ class RepairRequestAdmin(ModelView, model=RepairRequest):
         RepairRequest.urgency,
     ]
 
-    column_filters = []  # пока пусто
+    column_filters = []
 
     column_default_sort = [(RepairRequest.created_at, True)]
 

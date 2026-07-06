@@ -39,6 +39,8 @@ services:
       - certbot_conf:/etc/letsencrypt
       - certbot_web:/var/www/certbot
       - ./state:/etc/nginx/state
+      - ./services/nginx/favicon.ico:/usr/share/nginx/html/favicon.ico
+      - ./services/nginx/logo.png:/usr/share/nginx/html/static/logo.png
     healthcheck:
 #      test: [ "CMD", "curl", "-f", "http://localhost/.well-known/acme-challenge/healthcheck" ]
       test: [ "CMD", "nginx", "-t" ]  # проверяет только конфиг
@@ -113,7 +115,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-
   gateway-blue:
     container_name: gateway-blue
     build:
@@ -158,7 +159,6 @@ services:
           memory: 256M
         reservations:
           memory: 128M
-
 
   gateway-green:
     container_name: gateway-green
@@ -299,10 +299,61 @@ services:
       postgres:
         condition: service_healthy
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    ports:
+      - "15672:15672"    # Management UI
+    expose:
+      - "5672"
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  telegram-bot:
+    mem_limit: 256m
+    build:
+      context: .
+      dockerfile: services/telegram-bot/Dockerfile
+    container_name: telegram-bot
+    env_file:
+      - .env
+    environment:
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
+      CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
 volumes:
   postgres_data:
-    # ✅ Защищаем volume от случайного удаления
     name: repair_crm_postgres_data
-    external: true   # ← ДОБАВИТЬ
+    external: true
   certbot_conf:
   certbot_web:
+  rabbitmq_data:

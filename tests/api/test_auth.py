@@ -1,4 +1,5 @@
 import pytest
+from shared.settings import get_settings  # ← ДОБАВИТЬ
 
 pytestmark = pytest.mark.asyncio
 
@@ -8,9 +9,17 @@ class TestAuth:
 
     async def test_login_success(self, auth_client):
         """Успешный логин"""
+
+        settings = get_settings()  # ← ДОБАВИТЬ
+
         response = await auth_client.post(
-            "/login", json={"username": "admin", "password": "admin123"}
+            "/login",
+            json={
+                "username": settings.admin_username,
+                "password": settings.admin_password,  # ← из .env
+            },
         )
+
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data

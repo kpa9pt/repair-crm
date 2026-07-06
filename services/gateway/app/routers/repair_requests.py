@@ -15,6 +15,7 @@ from shared.schemas import (
     RepairRequestListResponse,
 )
 from shared.auth import get_current_user, require_role, User
+from shared.rabbitmq import publisher
 
 
 router = APIRouter(prefix="/api/v1/repair-requests", tags=["Repair Requests"])
@@ -66,6 +67,24 @@ async def create_repair_request(
     # Конвертируем Pydantic модель в словарь
     new_request = await repo.create(**data)
     await repo.session.commit()
+
+    print(
+        f"🔔 Attempting to publish event for request #{new_request.id}", flush=True
+    )  # ← ДОБАВИТЬ
+
+    publisher.publish(
+        "repair_request.created",
+        {
+            "id": new_request.id,
+            "vehicle_name": new_request.vehicle_name,
+            "client_name": new_request.client_name,
+            "description": new_request.description,
+            "created_by": current_user.username,
+        },
+    )
+
+    print(f"✅ Event published for request #{new_request.id}", flush=True)  # ← ДОБАВИТЬ
+
     return RepairRequestResponse.model_validate(new_request)
 
 
@@ -194,5 +213,14 @@ async def delete_repair_request(
 
     await repo.session.delete(existing)
     await repo.session.commit()
+
+    publisher.publish(
+        "repair_request.deleted",
+        {
+            "id": request_id,
+            "vehicle_name": existing.vehicle_name,
+            "deleted_by": current_user.username,
+        },
+    )
 
     return None  # 204 No Content
