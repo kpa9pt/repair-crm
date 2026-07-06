@@ -5,8 +5,6 @@ TEST_PATH=${1:-tests}
 
 
 echo "🚀 Starting infrastructure..."
-#docker compose down -v
-#docker compose up -d --build
 docker compose \
   -f docker-compose.yml \
   -f docker-compose.test.yml \

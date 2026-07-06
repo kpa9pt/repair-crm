@@ -49,5 +49,27 @@ def is_single(service: str) -> bool:
     return get_strategy(service) == "single"
 
 
+def get_blue_green_services() -> List[str]:
+    """Возвращает список blue-green сервисов"""
+    registry = load_registry()
+    return [
+        service
+        for service, config in registry["services"].items()
+        if config.get("strategy") == "blue-green"
+    ]
+
+
+def get_service_containers(service: str) -> List[str]:
+    """
+    Возвращает имена контейнеров для сервиса.
+    Для blue-green: ['gateway-blue', 'gateway-green']
+    Для single: ['nginx']
+    """
+    config = get_service_config(service)
+    if config.get("strategy") == "blue-green":
+        return [f"{service}-blue", f"{service}-green"]
+    return [service]
+
+
 # Для обратной совместимости с существующими скриптами
 SERVICES = get_services()

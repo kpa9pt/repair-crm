@@ -1,12 +1,7 @@
-import sys
-from pathlib import Path
 import json
 import os
 import fnmatch
 from shared.service_registry import get_services, get_service_config
-
-# Добавляем корень проекта в PYTHONPATH
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 def detect_changed_services():
