@@ -13,49 +13,10 @@ jobs:
         with:
           python-version: '3.14'
 
-      # ===== КЕШИРУЕМ PIP =====
-      - name: Cache pip packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-
-      # ===== КЕШИРУЕМ POSTGRES ОБРАЗ =====
-      - name: Cache postgres image
-        uses: actions/cache@v3
-        with:
-          path: /tmp/postgres.tar
-          key: ${{ runner.os }}-postgres-${{ hashFiles('docker-compose.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-postgres-
-
-      - name: Load postgres image from cache
-        run: |
-          if [ -f /tmp/postgres.tar ]; then
-            docker load -i /tmp/postgres.tar
-            echo "✅ Postgres loaded from cache"
-          else
-            echo "No postgres cache found"
-          fi
-
-      # ===== КЕШИРУЕМ DOCKER LAYERS =====
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ hashFiles('requirements.txt', 'services/**/Dockerfile', 'shared/**/*.py') }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Setup env for tests
         run: cp .env.example .env
@@ -65,12 +26,3 @@ jobs:
 
       - name: Run tests
         run: make test
-        env:
-          DOCKER_BUILDKIT: 1
-          BUILDKIT_INLINE_CACHE: 1
-
-      # ===== СОХРАНЯЕМ POSTGRES В КЕШ ======
-      - name: Save postgres image to cache
-        if: always()
-        run: |
-          docker save postgres:15 -o /tmp/postgres.tar 2>/dev/null || true
