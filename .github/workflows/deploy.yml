@@ -180,6 +180,10 @@ jobs:
       - name: Write .env from secret
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
+      - name: Copy .env to server
+        run: |
+          scp .env ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/.env
+
       - name: push to VDS
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
