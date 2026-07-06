@@ -73,6 +73,7 @@ jobs:
           scp ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/state.json \
             state.backup.json
 
+
       - name: Download images artifact
         run: |
           gh run download ${{ github.event.workflow_run.id }} \
@@ -80,6 +81,24 @@ jobs:
           -D .
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            
+      # ===== ЗАГРУЖАЕМ БЕКАП С СЕРВЕРА =====
+      - name: Download images backup from server
+        run: |
+          if ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "[ -f ~/repair-crm/state/images.failed.json ]"; then
+            echo "📥 Downloading images backup from server..."
+            scp ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/images.failed.json .
+            echo "✅ images.failed.json downloaded"
+          else
+            echo "✅ No images backup on server"
+          fi
+
+      - name: Restore lost images from failed deploy
+        run: |
+          python scripts/deploy/merge_images.py
+        env:
+          PYTHONPATH: .
+
 
       - name: Update state
         run: |
@@ -240,6 +259,28 @@ jobs:
           else
             echo "backup empty - skip restore"
           fi
+
+      # ✅ Бекапим images.json только если деплой провалился
+      - name: Save images backup to server
+        if: always() && steps.unlock.outcome != 'success'
+        run: |
+          if [ -f images.json ]; then
+            echo "📦 Saving images backup to server..."
+            scp images.json \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/state/images.failed.json
+            echo "✅ images.failed.json saved to server"
+          fi
+
+      # ===== УДАЛЯЕМ БЕКАП С СЕРВЕРА ПРИ УСПЕХЕ =====
+      - name: Remove images backup from server
+        if: success()
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
+            if [ -f ~/repair-crm/state/images.failed.json ]; then
+              rm ~/repair-crm/state/images.failed.json
+              echo '✅ images.failed.json removed from server'
+            fi
+          "
 
       - name: Post Reload nginx
         if: always() && steps.unlock.outcome != 'success'
