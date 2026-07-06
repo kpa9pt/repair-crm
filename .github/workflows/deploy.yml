@@ -177,16 +177,13 @@ jobs:
           scp docker-compose.override.yml \
               ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:~/repair-crm/docker-compose.override.yml
 
+      - name: Write .env from secret
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
       - name: push to VDS
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "DATABASE_URL='${{ secrets.DATABASE_URL }}' \
-             ADMIN_USERNAME='${{ secrets.ADMIN_USERNAME }}' \
-             ADMIN_PASSWORD='${{ secrets.ADMIN_PASSWORD }}' \
-             SECRET_KEY='${{ secrets.SECRET_KEY }}' \
-             TELEGRAM_TOKEN='${{ secrets.TELEGRAM_TOKEN }}' \
-             DOMAIN_NAME='${{ secrets.DOMAIN_NAME }}' \
-             bash -s" < scripts/deploy/push_to_vds.sh
+            "bash -s" < scripts/deploy/push_to_vds.sh
 
       - name: Recreate containers with changed compose
         if: steps.changed-compose.outputs.services != '[]'

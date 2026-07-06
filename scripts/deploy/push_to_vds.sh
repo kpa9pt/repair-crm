@@ -28,15 +28,8 @@ if [ ! -f docker-compose.yml ]; then
     exit 1
 fi
 
-echo "=== WRITE ENV ==="
-cat > .env <<EOF
-DATABASE_URL=$DATABASE_URL
-ADMIN_USERNAME=$ADMIN_USERNAME
-ADMIN_PASSWORD=$ADMIN_PASSWORD
-SECRET_KEY=$SECRET_KEY
-TELEGRAM_TOKEN=$TELEGRAM_TOKEN
-DOMAIN_NAME=$DOMAIN_NAME
-EOF
+echo "=== COPY ENV ==="
+scp .env $SERVER_USER@$SERVER_IP:~/repair-crm/.env
 
 # ✅ ДОБАВЛЯЕМ: создаем volume если его нет
 echo "=== CREATE VOLUME ==="
