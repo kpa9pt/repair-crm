@@ -53,7 +53,7 @@ test: check-env
 
 
 generate-migrations: check-env
-	@echo "📝 Generating migrations..."
+	@echo "📝 Generating migrations...."
 	@docker compose up -d postgres
 	@sleep 2
 	@alembic revision --autogenerate -m "$(message)"
