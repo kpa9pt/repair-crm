@@ -1,4 +1,4 @@
-.PHONY: up down build logs test test-unit test-api test-integration
+.PHONY: up down build logs test test-unit test-api test-integration init-admin
 
 # Проверяем наличие .env, если нет — создаем из .env.example
 check-env:
@@ -12,6 +12,8 @@ check-env:
 			touch .env; \
 		fi \
 	fi
+	@echo "📦 Creating external volume if not exists..."
+	@docker volume create repair_crm_postgres_data 2>/dev/null || true
 
 up: check-env
 	docker compose up -d
@@ -51,9 +53,8 @@ test: check-env
 	@$(MAKE) test-integration FULL_TEST=true
 	@$(MAKE) down-v
 
-
 generate-migrations: check-env
-	@echo "📝 Generating migrations...."
+	@echo "📝 Generating migrations..."
 	@docker compose up -d postgres
 	@sleep 2
 	@alembic revision --autogenerate -m "$(message)"
