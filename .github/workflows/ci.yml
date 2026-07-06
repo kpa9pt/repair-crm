@@ -69,7 +69,7 @@ jobs:
           DOCKER_BUILDKIT: 1
           BUILDKIT_INLINE_CACHE: 1
 
-      # ===== СОХРАНЯЕМ POSTGRES В КЕШ =====
+      # ===== СОХРАНЯЕМ POSTGRES В КЕШ ======
       - name: Save postgres image to cache
         if: always()
         run: |
