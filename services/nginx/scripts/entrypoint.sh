@@ -16,7 +16,7 @@ echo "[STEP] nginx test"
 nginx -t || {
     echo "[ERROR] nginx config test failed, but continuing..."
 }
-echo "[STEP] test messeage"
+
 echo "[STEP] start nginx"
 nginx -g 'daemon off;' &
 NGINX_PID=$!
