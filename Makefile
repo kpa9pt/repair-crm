@@ -43,7 +43,7 @@ test-e2e: check-env
 # Флаг для полного теста
 FULL_TEST ?= false
 
-test:
+test: check-env
 	@echo "🚀 Running full test suite..."
 	@$(MAKE) down-v
 	@$(MAKE) test-unit FULL_TEST=true
@@ -51,17 +51,6 @@ test:
 	@$(MAKE) test-integration FULL_TEST=true
 	@$(MAKE) down-v
 
-# ===== НОВАЯ КОМАНДА ДЛЯ CI С КЕШЕМ =====
-test-ci:
-	@echo "🚀 Running tests with Docker cache..."
-	@docker compose -f docker-compose.yml -f docker-compose.test.yml build \
-		--cache-from=type=local,src=/tmp/.buildx-cache \
-		--cache-to=type=local,dest=/tmp/.buildx-cache
-	@$(MAKE) down-v
-	@$(MAKE) test-unit FULL_TEST=true
-	@$(MAKE) test-api FULL_TEST=true
-	@$(MAKE) test-integration FULL_TEST=true
-	@$(MAKE) down-v
 
 generate-migrations: check-env
 	@echo "📝 Generating migrations..."
