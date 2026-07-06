@@ -12,6 +12,13 @@ class Settings(BaseSettings):
     admin_password: str = "admin123"  # Добавляем с дефолтом
     domain_name: str = "localhost"
 
+    # ✅ ДОБАВЛЯЕМ
+    telegram_chat_id: str | None = None
+    rabbitmq_user: str = "guest"
+    rabbitmq_pass: str = "guest"
+    rabbitmq_host: str = "rabbitmq"
+    rabbitmq_port: int = 5672
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

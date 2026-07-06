@@ -41,3 +41,10 @@ services:
     paths:
       - 'services/watchdog/**'
       - 'scripts/rollback.py'
+
+  telegram-bot:
+    strategy: single
+    paths:
+      - 'services/telegram-bot/**'
+      - 'shared/**'
+      - 'requirements.txt'

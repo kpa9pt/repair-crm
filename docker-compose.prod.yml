@@ -22,3 +22,6 @@ services:
 
   watchdog:
     image: ${WATCHDOG_IMAGE}
+
+  telegram-bot:
+    image: ${TELEGRAM_BOT_IMAGE}
