@@ -1,4 +1,4 @@
-.PHONY: up down build logs
+.PHONY: up down build logs test test-unit test-api test-integration
 
 # Проверяем наличие .env, если нет — создаем из .env.example
 check-env:
@@ -13,63 +13,61 @@ check-env:
 		fi \
 	fi
 
-
 up: check-env
-		docker-compose up -d
+	docker compose up -d
 
 down:
-	docker-compose down
+	docker compose down
 
 down-v:
-	docker-compose down -v
+	docker compose down -v
 
 build: check-env
-		docker-compose up -d --build
+	docker compose up -d --build
 
 logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 test-unit: check-env
-		pytest tests/unit -v
+	pytest tests/unit -v
 
 test-api: check-env
-		./scripts/test.sh tests/api
+	./scripts/test.sh tests/api
 
 test-integration: check-env
-		./scripts/test.sh tests/integration
+	./scripts/test.sh tests/integration
 
 test-e2e: check-env
-		./scripts/test.sh tests/e2e
+	./scripts/test.sh tests/e2e
 
 # Флаг для полного теста
 FULL_TEST ?= false
 
 test:
 	@echo "🚀 Running full test suite..."
-	@$(MAKE) down-v  # ← правильно
+	@$(MAKE) down-v
 	@$(MAKE) test-unit FULL_TEST=true
 	@$(MAKE) test-api FULL_TEST=true
 	@$(MAKE) test-integration FULL_TEST=true
-	@$(MAKE) down-v  # ← правильно
+	@$(MAKE) down-v
 
 generate-migrations: check-env
-		@echo "📝 Generating migrations..."
-		@docker-compose up -d postgres
-		@sleep 2
-		@alembic revision --autogenerate -m "$(message)"
-		@echo "✅ Migration created in shared/db/migrations/versions/"
-		@echo "⚠️  Don't forget to commit this file!"
+	@echo "📝 Generating migrations..."
+	@docker compose up -d postgres
+	@sleep 2
+	@alembic revision --autogenerate -m "$(message)"
+	@echo "✅ Migration created in shared/db/migrations/versions/"
+	@echo "⚠️  Don't forget to commit this file!"
 
 COMPOSE_FILES = -f docker-compose.yml -f docker-compose.test.yml
 
 generate-migrations-docker: check-env
-		@echo "📝 Generating migrations..."
-		@docker-compose $(COMPOSE_FILES) up -d postgres
-		@sleep 2
-		@alembic revision --autogenerate -m "$(message)"
-		@echo "✅ Migration created in shared/db/migrations/versions/"
-		@echo "⚠️  Don't forget to commit this file!"
-
+	@echo "📝 Generating migrations..."
+	@docker compose $(COMPOSE_FILES) up -d postgres
+	@sleep 2
+	@alembic revision --autogenerate -m "$(message)"
+	@echo "✅ Migration created in shared/db/migrations/versions/"
+	@echo "⚠️  Don't forget to commit this file!"
 
 # Помощь
 help:
