@@ -100,6 +100,11 @@ jobs:
         env:
           PYTHONPATH: .
 
+      - name: Sync registry to state (add new services)
+        run: |
+          python scripts/deploy/sync_registry_to_state.py
+        env:
+          PYTHONPATH: .
 
       - name: Update state
         run: |
