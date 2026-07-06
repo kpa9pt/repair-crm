@@ -17,6 +17,19 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+
+      # ===== ДОБАВЛЯЕМ НАСТРОЙКУ BUILDX =====
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ===== ДОБАВЛЯЕМ КЕШ DOCKER LAYERS =====
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
           
       - name: Setup env for tests
         run: cp .env.example .env
@@ -24,5 +37,9 @@ jobs:
       - name: Create external volume for tests
         run: docker volume create repair_crm_postgres_data || true
 
-      - name: Run tests
-        run: make test
+      # ===== МЕНЯЕМ make test НА make test-ci =====
+      - name: Run tests with cache
+        run: make test-ci
+        env:
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
