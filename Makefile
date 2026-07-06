@@ -14,6 +14,11 @@ check-env:
 	fi
 	@echo "📦 Creating external volume if not exists..."
 	@docker volume create repair_crm_postgres_data 2>/dev/null || true
+	@echo "🗑️ Removing local state..."
+		@if [ -z "$$CI" ]; then \
+		echo "🗑️ Removing local state..."; \
+		rm -f state/state.json; \
+	fi
 
 up: check-env
 	docker compose up -d
