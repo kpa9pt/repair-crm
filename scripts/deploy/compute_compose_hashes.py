@@ -12,6 +12,7 @@ IGNORE_SERVICES = ["postgres"]
 # Blue-green сервисы: какие compose-сервисы объединять в один state-сервис
 BLUE_GREEN_MAP = {
     "gateway": ["gateway-blue", "gateway-green"],
+    "auth": ["auth-blue", "auth-green"],
 }
 
 
