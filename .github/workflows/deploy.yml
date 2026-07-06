@@ -58,6 +58,7 @@ jobs:
         if: steps.state.outputs.exists == 'false'
         env:
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}  # ← добавить
           PYTHONPATH: .  # ← добавить
         run: |
           python scripts/deploy/bootstrap_state.py > state.json
@@ -104,6 +105,8 @@ jobs:
         run: |
           python scripts/deploy/update_state.py > new_state.json
           mv new_state.json state.json
+        env:
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}  # ← добавить если нет
 
       - name: Sync state to server (always)
         run: |

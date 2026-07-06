@@ -4,7 +4,9 @@ import os
 STATE_PATH = "state.json"
 CHANGES_PATH = "images.json"
 
-OWNER = "kpa9pt"
+OWNER = os.environ.get("GITHUB_REPOSITORY_OWNER")
+if not OWNER:
+    raise RuntimeError("GITHUB_REPOSITORY_OWNER not set")
 
 DEPLOY_ID = os.getenv("DEPLOY_ID")
 

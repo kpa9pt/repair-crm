@@ -2,6 +2,9 @@ services:
   postgres:
     ports:
       - "5432:5432"   # только для тестов локально
+volumes:
+  postgres_data:
+    external: false   # ← переопределяем для тестов
 
 #  gateway:
 #    environment:

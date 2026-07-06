@@ -4,7 +4,11 @@ import os
 import requests
 from shared.service_registry import get_services, get_service_config, is_blue_green
 
-OWNER = "kpa9pt"
+OWNER = os.environ.get("GITHUB_REPOSITORY_OWNER")
+if not OWNER:
+    print("ERROR: GITHUB_REPOSITORY_OWNER not set", file=sys.stderr)
+    sys.exit(1)
+
 
 TOKEN = os.environ.get("GHCR_READ_TOKEN")
 if not TOKEN:
@@ -14,6 +18,7 @@ if not TOKEN:
 # 🔥 DEBUG 1: проверяем что токен вообще есть и не пустой
 print("TOKEN EXISTS:", bool(TOKEN), file=sys.stderr)
 print("TOKEN PREFIX:", TOKEN[:6] if TOKEN else None, file=sys.stderr)
+print("OWNER:", OWNER, file=sys.stderr)  # ← добавить
 
 HEADERS = {
     "Authorization": f"token {TOKEN}",
