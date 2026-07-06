@@ -271,7 +271,7 @@ jobs:
             echo "✅ images.failed.json saved to server"
           fi
 
-      # ===== УДАЛЯЕМ БЕКАП С СЕРВЕРА ПРИ УСПЕХЕ =====
+      # ====== УДАЛЯЕМ БЕКАП С СЕРВЕРА ПРИ УСПЕХЕ ======
       - name: Remove images backup from server
         if: success()
         run: |
