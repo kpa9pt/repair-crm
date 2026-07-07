@@ -4,16 +4,21 @@ import os
 import pika
 import threading
 import asyncio
+import httpx
 from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes
-import httpx
 from telegram.request import HTTPXRequest
 
-# ===== ПРОКСИ =====
-PROXY_HOST = "127.0.0.1"  # ← на VPS прокси слушает на localhost
+# ===== НАСТРОЙКИ ПРОКСИ =====
+PROXY_HOST = "172.17.0.1"
 PROXY_PORT = 1080
 proxy_url = f"socks5://{PROXY_HOST}:{PROXY_PORT}"
-transport = httpx.AsyncHTTPTransport(proxy=proxy_url)
+
+# Создаем HTTPX клиент с прокси
+http_client = httpx.AsyncClient(
+    proxies=proxy_url,
+    timeout=httpx.Timeout(30.0),
+)
 
 # === Настройки ===
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -31,8 +36,8 @@ RABBITMQ_PASS = os.getenv("RABBITMQ_PASS", "guest")
 # === Telegram Bot ===
 def setup_bot():
     """Настройка Telegram бота с прокси"""
-    # Создаем request с прокси
-    request = HTTPXRequest(transport=transport)
+    # Создаем request с клиентом
+    request = HTTPXRequest(client=http_client)  # ← ИСПРАВЛЕНО
 
     app = Application.builder().token(TELEGRAM_TOKEN).request(request).build()
 
