@@ -14,7 +14,8 @@ app = FastAPI(
     title="Gateway API",
     version="0.1.0",
     description="API Gateway для CRM ремонтной мастерской",
-    root_path="/gateway",  # ← ДОБАВИТЬ
+    root_path="/gateway",
+    root_path_in_servers=True,  # ← ДОБАВИТЬ ЭТО
 )
 
 # Добавляем middleware для сессий (нужен для аутентификации админки)
