@@ -16,7 +16,7 @@ proxy_url = f"socks5://{PROXY_HOST}:{PROXY_PORT}"
 
 # Создаем HTTPX клиент с прокси
 http_client = httpx.AsyncClient(
-    proxies=proxy_url,
+    proxy=proxy_url,  # ← ИСПРАВЛЕНО: proxy (единственное число)
     timeout=httpx.Timeout(30.0),
 )
 
@@ -37,7 +37,7 @@ RABBITMQ_PASS = os.getenv("RABBITMQ_PASS", "guest")
 def setup_bot():
     """Настройка Telegram бота с прокси"""
     # Создаем request с клиентом
-    request = HTTPXRequest(client=http_client)  # ← ИСПРАВЛЕНО
+    request = HTTPXRequest(client=http_client)
 
     app = Application.builder().token(TELEGRAM_TOKEN).request(request).build()
 
