@@ -7,7 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from shared.db import get_engine  # ← импортируем новую функцию
 from fastapi.responses import RedirectResponse
 from fastapi import Request
-from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 settings = get_settings()
 
@@ -19,11 +19,8 @@ app = FastAPI(
     root_path_in_servers=True,  # ← ДОБАВИТЬ ЭТО
 )
 
-# ✅ ДОБАВИТЬ ЭТО
-app.add_middleware(
-    ProxyHeadersMiddleware,
-    trusted_hosts=["*"],
-)
+# Добавить ПОСЛЕ создания app
+app.add_middleware(HTTPSRedirectMiddleware)
 
 # Добавляем middleware для сессий (нужен для аутентификации админки)
 app.add_middleware(
