@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     rabbitmq_host: str = "rabbitmq"
     rabbitmq_port: int = 5672
 
+    # ✅ ДОБАВЛЯЕМ ПОЛЯ ДЛЯ ПРОКСИ
+    http_proxy: str | None = None
+    https_proxy: str | None = None
+    all_proxy: str | None = None
+    no_proxy: str | None = None
+
     model_config = SettingsConfigDict(env_file=".env")
 
 
