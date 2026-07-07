@@ -7,6 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from shared.db import get_engine  # ← импортируем новую функцию
 from fastapi.responses import RedirectResponse
 from fastapi import Request
+from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
 
 settings = get_settings()
 
@@ -16,6 +17,12 @@ app = FastAPI(
     description="API Gateway для CRM ремонтной мастерской",
     root_path="/gateway",
     root_path_in_servers=True,  # ← ДОБАВИТЬ ЭТО
+)
+
+# ✅ ДОБАВИТЬ ЭТО
+app.add_middleware(
+    ProxyHeadersMiddleware,
+    trusted_hosts=["*"],
 )
 
 # Добавляем middleware для сессий (нужен для аутентификации админки)
