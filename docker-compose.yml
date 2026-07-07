@@ -342,11 +342,10 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
       CHAT_ID: ${TELEGRAM_CHAT_ID:-}
-      # ✅ ДОБАВЛЯЕМ ПРОКСИ
-      HTTP_PROXY: socks5://172.17.0.1:1080
-      HTTPS_PROXY: socks5://172.17.0.1:1080
-      ALL_PROXY: socks5://172.17.0.1:1080
-      NO_PROXY: localhost,127.0.0.1,rabbitmq
+      HTTP_PROXY: ${HTTP_PROXY}
+      HTTPS_PROXY: ${HTTPS_PROXY}
+      ALL_PROXY: ${ALL_PROXY}
+      NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,rabbitmq}
     depends_on:
       rabbitmq:
         condition: service_healthy
